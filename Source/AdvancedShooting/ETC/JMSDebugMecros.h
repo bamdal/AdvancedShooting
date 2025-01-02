@@ -52,22 +52,22 @@ if (GetWorld()) \
 
 //-------------------------------------------------------------------------------------------------
 
-DECLARE_LOG_CATEGORY_EXTERN(Headcooler, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(JMSLoging, Log, All);
 
 // 함수 이름 + 코드 라인 출력 
-#define HLOG_CALLINFO ( FString(__FUNCTION__) + TEXT("(") + FString::FromInt(__LINE__) + TEXT(")") )
+#define JMSLOG_CALLINFO ( FString(__FUNCTION__) + TEXT("(") + FString::FromInt(__LINE__) + TEXT(")") )
 
-#define HLOG_S( Verbosity ) \
-UE_LOG( Headcooler, Verbosity, TEXT("%s"), *HLOG_CALLINFO )
+#define JMSLOG_S( Verbosity ) \
+UE_LOG( JMSLoging, Verbosity, TEXT("%s"), *HLOG_CALLINFO )
 
-#define HLOG( Verbosity, Format, ... ) \
-UE_LOG( Headcooler, Verbosity, TEXT("%s %s"), *HLOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__) )
+#define JMSLOG( Verbosity, Format, ... ) \
+UE_LOG( JMSLoging, Verbosity, TEXT("%s %s"), *HLOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__) )
 
-#define HCHECK( Expr, ... ) \
+#define JMSCHECK( Expr, ... ) \
 { \
 if( !(Expr) ) \
 { \
-HLOG( Error, TEXT("ASSERTION : %s"), TEXT("'"#Expr"'") ); \
+JMSLOG( Error, TEXT("ASSERTION : %s"), TEXT("'"#Expr"'") ); \
 return __VA_ARGS__; \
 } \
 }
@@ -91,5 +91,5 @@ return __VA_ARGS__; \
 #define ROLE_TO_STRING(Value) FindObject<UEnum>(ANY_PACKAGE, TEXT("ENetRole"), true)->GetNameStringByIndex(static_cast<int32>(Value))
 
 #define JMSLOG_NET_LOG( Verbosity, Format, ... ) \
-    UE_LOG(Headcooler, Verbosity, TEXT("[%s][%s/%s] %s %s"), \
+    UE_LOG(JMSLoging, Verbosity, TEXT("[%s][%s/%s] %s %s"), \
     JMSLOG_NETMODE, JMSLOG_LOCALROLE, JMSLOG_REMOTEROLE, *HLOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__) )

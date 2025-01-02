@@ -78,7 +78,7 @@ Intermediate/*
 Saved/*
 !Content/
 Content/*
-!Content/BP/**.uasset
+!Content/**
 Build/*
 Plugins/*
 
