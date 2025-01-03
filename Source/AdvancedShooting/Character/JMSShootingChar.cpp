@@ -17,6 +17,10 @@ void AJMSShootingChar::SwitchWeapon(const FInputActionValue& InputActionValue)
 	//GEngine->AddOnScreenDebugMessage(-1,3.0f,FColor::Red,FString::Printf(TEXT("%f"),Result));
 }
 
+void AJMSShootingChar::Aim(const FInputActionValue& InputActionValue)
+{
+}
+
 void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -24,6 +28,6 @@ void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	if(UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(IA_SwitchWeapon,ETriggerEvent::Triggered,this,&AJMSShootingChar::SwitchWeapon);
-		EnhancedInputComponent->BindAction(IA_SwitchWeapon,ETriggerEvent::Started,this,&AJMSShootingChar::SwitchWeapon);
+		EnhancedInputComponent->BindAction(IA_AIM,ETriggerEvent::Triggered,this,&AJMSShootingChar::Aim);
 	}
 }

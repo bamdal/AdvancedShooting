@@ -20,10 +20,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_SwitchWeapon;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* IA_AIM;
 
 protected:
 	UFUNCTION()
 	void SwitchWeapon(const FInputActionValue& InputActionValue);
+
+	UFUNCTION()
+	void Aim(const FInputActionValue& InputActionValue);
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
