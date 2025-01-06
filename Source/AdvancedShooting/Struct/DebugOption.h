@@ -1,0 +1,16 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "DebugOption.generated.h"
+
+USTRUCT(BlueprintType)
+struct FDebugOption
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool ShowLocomotionData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool ShowGateData;
+};
