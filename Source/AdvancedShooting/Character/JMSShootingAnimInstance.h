@@ -29,6 +29,11 @@ protected:
 
 public:
 
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
+
+	
+	// Interface ==========================================
+	
 	UFUNCTION(BlueprintCallable)
 	virtual void ReceiveCurrentGate(E_Gate Gate) override { CurrentGate = Gate; };
 

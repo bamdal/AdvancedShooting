@@ -7,3 +7,8 @@
 UJMSShootingAnimInstance::UJMSShootingAnimInstance()
 {
 }
+
+void UJMSShootingAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+}
