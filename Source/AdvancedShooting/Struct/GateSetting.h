@@ -9,20 +9,20 @@ struct FGateSetting
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxWalkSpeed;
+	float MaxWalkSpeed;				// 최대 걷기 속도
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxAcceleration;
+	float MaxAcceleration;			// 최대 가속
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BrakingDeceleration;
+	float BrakingDeceleration;		// 감속 걷기 제동
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BrakingFrictionFactor;
+	float BrakingFrictionFactor;	// 마찰 인수 제동
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BrakingFiction;
+	float BrakingFiction;			// 마찰 제동
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool UseSeparateBrakingFiction;
+	bool bUseSeparateBrakingFiction;	// 별도 브레이킹 마찰 사용
 };
