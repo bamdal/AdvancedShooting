@@ -13,4 +13,7 @@ struct FDebugOption
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool ShowGateData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool DistanceMatching;
 };
