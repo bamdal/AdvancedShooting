@@ -27,6 +27,15 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gate")
 	E_Gate CurrentGate;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gate")
+	E_Gate InComingGate;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gate")
+	E_Gate LastFrameGate;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Gate")
+	bool IsGateChanged;
+
 public:
 
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
@@ -35,7 +44,7 @@ public:
 	// Interface ==========================================
 	
 	UFUNCTION(BlueprintCallable)
-	virtual void ReceiveCurrentGate(E_Gate Gate) override { CurrentGate = Gate; };
+	virtual void ReceiveCurrentGate(E_Gate Gate) override { InComingGate = Gate; };
 
 	UFUNCTION(BlueprintCallable)
 	virtual void ReceiveEquippedGun(E_Weapon Gun) override { EquippedGun = Gun; };
