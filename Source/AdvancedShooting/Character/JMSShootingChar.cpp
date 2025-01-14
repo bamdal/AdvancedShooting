@@ -86,6 +86,7 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 		GetCharacterMovement()->BrakingDecelerationWalking = GateSettingInfo->BrakingDecelerationWalking;
 		GetCharacterMovement()->BrakingFrictionFactor = GateSettingInfo->BrakingFrictionFactor;
 		GetCharacterMovement()->BrakingFriction = GateSettingInfo->BrakingFriction;
+		GetCharacterMovement()->GroundFriction = GateSettingInfo->GroundFriction;
 		GetCharacterMovement()->bUseSeparateBrakingFriction = GateSettingInfo->bUseSeparateBrakingFriction;
 	}
 }
