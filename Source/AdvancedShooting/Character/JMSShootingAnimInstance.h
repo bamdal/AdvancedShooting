@@ -130,6 +130,17 @@ protected:
 	FFloatSpringState HRootYawOffsetSpringState;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HRootYawOffset)
 	float HVelocityLocomotionAngleWithOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HRootYawOffset)
+	float HTurnYawCurveValue;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HRootYawOffset)
+	float HLastFrameTurnYawCurveValue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HCrouch)
+	bool HIsCrouching;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HCrouch)
+	bool HLastFrameIsCrouched;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HCrouch)
+	bool HCrouchStateChanged;
 
 	
 public:
@@ -179,4 +190,6 @@ public:
 	void HUpdateRootYawOffset(float DeltaSeconds);
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	void HSetRootYawOffset(float Angle);
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
+	void HProcessTurnYawCurve();
 };

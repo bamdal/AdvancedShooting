@@ -33,6 +33,7 @@ void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 		                                   &AJMSShootingChar::SwitchWeapon);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Started, this, &AJMSShootingChar::AimStarted);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Completed, this, &AJMSShootingChar::AimCompleted);
+		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this,&AJMSShootingChar::CrouchAction);
 	}
 }
 
@@ -72,11 +73,25 @@ void AJMSShootingChar::AimCompleted(const FInputActionValue& InputActionValue)
 	UpdateGate(E_Gate::Jogging);
 }
 
+void AJMSShootingChar::CrouchAction(const FInputActionValue& InputActionValue)
+{
+	if (CurrentGate == E_Gate::Walking||CurrentGate == E_Gate::Jogging)
+	{
+		UpdateGate(E_Gate::Crouch);
+		Crouch();
+	}
+	else
+	{
+		UpdateGate(E_Gate::Jogging);
+		UnCrouch();
+	}
+}
+
 void AJMSShootingChar::UpdateGate(E_Gate Gate)
 {
 	CurrentGate = Gate;
 
-	UJMSShootingAnimInstance* ShootingAnimInstance = Cast<UJMSShootingAnimInstance>(GetMesh()->GetAnimInstance());
+ 	UJMSShootingAnimInstance* ShootingAnimInstance = Cast<UJMSShootingAnimInstance>(GetMesh()->GetAnimInstance());
 	FGateSetting* GateSettingInfo = GateSettings.Find(CurrentGate);
 	if (ShootingAnimInstance && GateSettingInfo)
 	{

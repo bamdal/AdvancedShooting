@@ -16,4 +16,7 @@ struct FDebugOption
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool DistanceMatching;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool ShowRootYawOffset;
 };

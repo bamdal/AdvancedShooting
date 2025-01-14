@@ -29,6 +29,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Aim;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* IA_Crouch;
+
 protected:
 	// 애니메이션 --------------------------------------
 
@@ -67,6 +70,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void AimCompleted(const FInputActionValue& InputActionValue);
 
+	UFUNCTION(BlueprintCallable)
+	void CrouchAction(const FInputActionValue& InputActionValue);
 protected:
 	// 애니메이션 --------------------------------------
 

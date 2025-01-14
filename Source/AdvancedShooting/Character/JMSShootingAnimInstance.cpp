@@ -215,6 +215,20 @@ void UJMSShootingAnimInstance::HGetCharacterState()
 	LastFrameGate = CurrentGate;
 	CurrentGate = InComingGate;
 	IsGateChanged = (CurrentGate != LastFrameGate) ? true : false;
+
+	
+	HLastFrameIsCrouched = HIsCrouching;
+	HIsCrouching = (InComingGate == E_Gate::Crouch) ? true : false;
+	if (HLastFrameIsCrouched != HIsCrouching)
+	{
+		HCrouchStateChanged = true;
+	}
+	else
+	{
+		HCrouchStateChanged = false;
+	}
+
+	
 }
 
 void UJMSShootingAnimInstance::HUpdateRootYawOffset(float DeltaSeconds)
@@ -238,4 +252,27 @@ void UJMSShootingAnimInstance::HUpdateRootYawOffset(float DeltaSeconds)
 void UJMSShootingAnimInstance::HSetRootYawOffset(float Angle)
 {
 	HRootYawOffset = FRotator::NormalizeAxis(Angle);
+}
+
+void UJMSShootingAnimInstance::HProcessTurnYawCurve()
+{
+	HLastFrameTurnYawCurveValue = HTurnYawCurveValue;
+
+	FName IsTurning = FName("IsTurning");
+	FName RootRotationZ = FName("root_rotation_Z");
+	float CurrentIsTurning = GetCurveValue(IsTurning);
+	if (CurrentIsTurning == 0.0f)
+	{
+		HTurnYawCurveValue = 0.0f;
+		HLastFrameTurnYawCurveValue = 0.0f;
+	}
+	else
+	{
+		HTurnYawCurveValue = GetCurveValue(RootRotationZ) / CurrentIsTurning;
+		if (HLastFrameTurnYawCurveValue != 0.0f)
+		{
+			float Delta = HRootYawOffset - (HTurnYawCurveValue - HLastFrameTurnYawCurveValue);
+			HSetRootYawOffset(Delta);
+		}
+	}
 }
