@@ -37,9 +37,10 @@ void FHAnimInstanceProxy::PreUpdate(UAnimInstance* InAnimInstance, float DeltaSe
 		GateSetting.BrakingFriction = MovementComponent->BrakingFriction;
 		GateSetting.GroundFriction = MovementComponent->GroundFriction;
 		GateSetting.bUseSeparateBrakingFriction = MovementComponent->bUseSeparateBrakingFriction;
-		
+
 		Velocity = MovementComponent->Velocity;
-		CurrentAcceleration = MovementComponent->GetCurrentAcceleration();		
+		CurrentAcceleration = MovementComponent->GetCurrentAcceleration();
+		MovementMode = MovementComponent->MovementMode;
 	}
 }
 
@@ -57,7 +58,6 @@ void FHAnimInstanceProxy::PostUpdate(UAnimInstance* InAnimInstance) const
 
 UJMSShootingAnimInstance::UJMSShootingAnimInstance()
 {
-	
 }
 
 void UJMSShootingAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
@@ -133,14 +133,17 @@ void UJMSShootingAnimInstance::HUpdateOrientationData()
 	HVelocityLocomotionAngle = UKismetAnimationLibrary::CalculateDirection(HCharacterVelocity2D, HWorldRotation);
 
 	HVelocityLocomotionAngleWithOffset = FRotator::NormalizeAxis(HVelocityLocomotionAngle - HRootYawOffset);
-	
+
 	HAccelerationLocomotionAngle = UKismetAnimationLibrary::CalculateDirection(HAcceleration2D, HWorldRotation);
-	
-	HVelocityLocomotionDirection = HCalculateLocomotionDirection(HVelocityLocomotionAngle, HVelocityLocomotionDirection);
-	HAccelerationLocomotionDirection = HCalculateLocomotionDirection(HAccelerationLocomotionAngle, HAccelerationLocomotionDirection);
+
+	HVelocityLocomotionDirection =
+		HCalculateLocomotionDirection(HVelocityLocomotionAngle, HVelocityLocomotionDirection);
+	HAccelerationLocomotionDirection = HCalculateLocomotionDirection(HAccelerationLocomotionAngle,
+	                                                                 HAccelerationLocomotionDirection);
 }
 
-E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(float CurrentLocomotionAngle, E_LocomotionDirection CurrentDirection,
+E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(
+	float CurrentLocomotionAngle, E_LocomotionDirection CurrentDirection,
 	float BackwardMin, float BackwardMax, float ForwardMin, float ForwardMax, float DeadZone)
 {
 	switch (CurrentDirection)
@@ -153,7 +156,8 @@ E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(fl
 			{
 				return E_LocomotionDirection::Forward;
 			}
-		} break;
+		}
+		break;
 	case E_LocomotionDirection::Backward:
 		{
 			float Min = BackwardMin + DeadZone;
@@ -161,8 +165,9 @@ E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(fl
 			if (CurrentLocomotionAngle < Min || CurrentLocomotionAngle > Max)
 			{
 				return E_LocomotionDirection::Backward;
-			}				
-		} break;
+			}
+		}
+		break;
 	case E_LocomotionDirection::Right:
 		{
 			float Min = ForwardMax - DeadZone;
@@ -171,7 +176,8 @@ E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(fl
 			{
 				return E_LocomotionDirection::Right;
 			}
-		} break;
+		}
+		break;
 	case E_LocomotionDirection::Left:
 		{
 			float Min = BackwardMin - DeadZone;
@@ -180,8 +186,9 @@ E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(fl
 			{
 				return E_LocomotionDirection::Left;
 			}
-		} break;
-		
+		}
+		break;
+
 	default:
 		break;
 	}
@@ -194,7 +201,7 @@ E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(fl
 	{
 		return E_LocomotionDirection::Forward;
 	}
-	else if ( CurrentLocomotionAngle > 0.0f)
+	else if (CurrentLocomotionAngle > 0.0f)
 	{
 		return E_LocomotionDirection::Right;
 	}
@@ -211,12 +218,12 @@ void UJMSShootingAnimInstance::HGetCharacterState()
 	HGateSetting.BrakingFriction = HProxy.GateSetting.BrakingFriction;
 	HGateSetting.GroundFriction = HProxy.GateSetting.GroundFriction;
 	HGateSetting.bUseSeparateBrakingFriction = HProxy.GateSetting.bUseSeparateBrakingFriction;
-	
+
 	LastFrameGate = CurrentGate;
 	CurrentGate = InComingGate;
 	IsGateChanged = (CurrentGate != LastFrameGate) ? true : false;
 
-	
+
 	HLastFrameIsCrouched = HIsCrouching;
 	HIsCrouching = (InComingGate == E_Gate::Crouch) ? true : false;
 	if (HLastFrameIsCrouched != HIsCrouching)
@@ -228,7 +235,44 @@ void UJMSShootingAnimInstance::HGetCharacterState()
 		HCrouchStateChanged = false;
 	}
 
-	
+	// 점프 관련 처리 추가
+	if (HProxy.MovementMode == MOVE_Falling)
+	{
+		HIsOnAIr = true;
+	}
+	else
+	{
+		HIsOnAIr = false;
+	}
+
+	if (HIsOnAIr && HCharacterVelocity.Z > 0.0f)
+	{
+		HIsJumping = true;
+	}
+	else
+	{
+		HIsJumping = false;
+	}
+
+	if (HIsOnAIr && HCharacterVelocity.Z < 0.0f)
+	{
+		HIsFalling = true;
+	}
+	else
+	{
+		HIsFalling = false;
+	}
+
+	// 캐릭터가 정점 또는 최대 높이에 도달했을 때
+	if (HIsJumping)
+	{
+		float GravityZ = HProxy.MovementComponent->GetGravityZ();
+		HTimeToJumpApex = (0 - HCharacterVelocity.Z) / GravityZ * HProxy.MovementComponent->GravityScale;
+	}
+	else
+	{
+		HTimeToJumpApex = 0.0f;
+	}
 }
 
 void UJMSShootingAnimInstance::HUpdateRootYawOffset(float DeltaSeconds)
@@ -242,10 +286,11 @@ void UJMSShootingAnimInstance::HUpdateRootYawOffset(float DeltaSeconds)
 	{
 		HSetRootYawOffset(0.0f);
 		float Angle = UKismetMathLibrary::FloatSpringInterp(HRootYawOffset, 0.0f,
-			HRootYawOffsetSpringState, 80.0f, 1.0f, DeltaSeconds, 1.0f, 0.5f);
+		                                                    HRootYawOffsetSpringState, 80.0f, 1.0f, DeltaSeconds, 1.0f,
+		                                                    0.5f);
 		HSetRootYawOffset(Angle);
 	}
-	
+
 	HRootYawOffsetMode = E_RootYawOffsetMode::BlendOut;
 }
 

@@ -41,6 +41,9 @@ public:
 
 	UPROPERTY(Transient)
 	FVector CurrentAcceleration;
+
+	UPROPERTY(Transient)
+	TEnumAsByte<enum EMovementMode> MovementMode;
 };
 
 /**
@@ -192,4 +195,15 @@ public:
 	void HSetRootYawOffset(float Angle);
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	void HProcessTurnYawCurve();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
+	bool HIsJumping;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
+	bool HIsFalling;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
+	bool HIsOnAIr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
+	float HTimeToJumpApex;
 };
