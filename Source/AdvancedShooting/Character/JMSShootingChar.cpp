@@ -83,9 +83,9 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 		ShootingAnimInstance->ReceiveCurrentGate(CurrentGate);
 		GetCharacterMovement()->MaxWalkSpeed = GateSettingInfo->MaxWalkSpeed;
 		GetCharacterMovement()->MaxAcceleration = GateSettingInfo->MaxAcceleration;
-		GetCharacterMovement()->BrakingDecelerationWalking = GateSettingInfo->BrakingDeceleration;
+		GetCharacterMovement()->BrakingDecelerationWalking = GateSettingInfo->BrakingDecelerationWalking;
 		GetCharacterMovement()->BrakingFrictionFactor = GateSettingInfo->BrakingFrictionFactor;
-		GetCharacterMovement()->BrakingFriction = GateSettingInfo->BrakingFiction;
-		GetCharacterMovement()->bUseSeparateBrakingFriction = GateSettingInfo->bUseSeparateBrakingFiction;
+		GetCharacterMovement()->BrakingFriction = GateSettingInfo->BrakingFriction;
+		GetCharacterMovement()->bUseSeparateBrakingFriction = GateSettingInfo->bUseSeparateBrakingFriction;
 	}
 }

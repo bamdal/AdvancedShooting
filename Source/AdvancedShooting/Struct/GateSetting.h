@@ -15,14 +15,17 @@ struct FGateSetting
 	float MaxAcceleration;			// 최대 가속
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BrakingDeceleration;		// 감속 걷기 제동
+	float BrakingDecelerationWalking;		// 감속 걷기 제동
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BrakingFrictionFactor;	// 마찰 인수 제동
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BrakingFiction;			// 마찰 제동
+	float BrakingFriction;			// 마찰 제동
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bUseSeparateBrakingFiction;	// 별도 브레이킹 마찰 사용
+	float GroundFriction; // 지면 마찰 값
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseSeparateBrakingFriction;	// 별도 브레이킹 마찰 사용
 };

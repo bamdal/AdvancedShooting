@@ -22,11 +22,19 @@ enum class E_Gate : uint8
 
 // 캐릭터의 이동방향
 UENUM(BlueprintType)
-enum class E_LocomotionDirections : uint8
+enum class E_LocomotionDirection : uint8
 {
 	Forward		UMETA(DisplayName = "Forward"),		// 앞
 	Backward 	UMETA(DisplayName = "Backward"),	// 뒤
 	Right 		UMETA(DisplayName = "Right"),		// 오른쪽
 	Left 		UMETA(DisplayName = "Left"),		// 왼쪽
 	
+};
+
+UENUM(BlueprintType)
+enum class E_RootYawOffsetMode : uint8
+{
+	Accumulate		UMETA(DisplayName = "Accumulate"),
+	BlendOut		UMETA(DisplayName = "BlendOut"),
+	Hold			UMETA(DisplayName = "Hold"),
 };
