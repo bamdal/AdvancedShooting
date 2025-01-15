@@ -39,6 +39,9 @@ public:
 	FRotator ActorRotation;
 
 	UPROPERTY(Transient)
+	float AimRotationPitch;
+
+	UPROPERTY(Transient)
 	FVector Velocity;
 
 	UPROPERTY(Transient)
@@ -119,6 +122,8 @@ protected:
 	float HLeanAngle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HRotationData)
 	float HAccelerationLocomotionAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HRotationData)
+	float HAimPitch;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HLocomotion)
 	E_LocomotionDirection HVelocityLocomotionDirection;

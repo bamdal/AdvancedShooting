@@ -31,6 +31,7 @@ void FHAnimInstanceProxy::PreUpdate(UAnimInstance* InAnimInstance, float DeltaSe
 	{
 		ActorLocation = Owner->GetActorLocation();
 		ActorRotation = Owner->GetActorRotation();
+		AimRotationPitch = Owner->GetBaseAimRotation().Pitch;
 	}
 	if (::IsValid(MovementComponent))
 	{
@@ -171,7 +172,11 @@ void UJMSShootingAnimInstance::HGetRotationData(float DeltaSeconds)
 		{
 			HLeanAngle = 90.0f;
 		}
+
+		
 	}
+	// 에임 오프셋 pitch값
+	HAimPitch = FRotator::NormalizeAxis(HProxy.AimRotationPitch);
 }
 
 void UJMSShootingAnimInstance::HUpdateOrientationData()
