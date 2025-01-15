@@ -11,6 +11,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "JMSShootingAnimInstance.generated.h"
 
+class AJMSShootingChar;
+
 USTRUCT()
 struct FHAnimInstanceProxy : public FAnimInstanceProxy
 {
@@ -155,7 +157,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void ReceiveEquippedGun(E_Weapon Gun) override { EquippedGun = Gun; };
-	
+
+	UFUNCTION(BlueprintCallable)
+	virtual void ReceiveGroundDistance(float Distance) override { HGroundDistance = Distance; };
 
 
 	
@@ -174,6 +178,16 @@ private:
 public:
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
+	UPROPERTY()
+	AJMSShootingChar* MainChar;
+
+	UPROPERTY()
+	float HalfHeight;
+
+	virtual void NativeBeginPlay() override;
+
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	void HGetVelocity();
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
@@ -188,7 +202,7 @@ public:
 	E_LocomotionDirection HCalculateLocomotionDirection(float CurrentLocomotionAngle, E_LocomotionDirection CurrentDirection,
 		float BackwardMin = -130.0f, float BackwardMax = 130.0f, float ForwardMin = -50.0f, float ForwardMax = 50.0f, float DeadZone = 20.0f);
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
-	void HGetCharacterState();
+	void HGetCharacterState(float DeltaSeconds);
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	void HUpdateRootYawOffset(float DeltaSeconds);
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
@@ -206,4 +220,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
 	float HTimeToJumpApex;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
+	float HGroundDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HJump)
+	float HTimeFalling;
+	
 };

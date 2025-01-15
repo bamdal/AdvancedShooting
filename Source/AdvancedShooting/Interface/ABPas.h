@@ -28,5 +28,7 @@ public:
 	virtual void ReceiveEquippedGun(E_Weapon Gun) =0;
 
 	virtual void ReceiveCurrentGate(E_Gate Gate)=0;
+
+	virtual void ReceiveGroundDistance(float Distance)=0;
 	
 };

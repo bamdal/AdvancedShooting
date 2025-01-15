@@ -19,4 +19,7 @@ struct FDebugOption
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool ShowRootYawOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool ShowJumpData;
 };

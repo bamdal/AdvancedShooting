@@ -2,8 +2,12 @@
 
 
 #include "JMSShootingAnimInstance.h"
+
+#include "JMSShootingChar.h"
 #include "KismetAnimationLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 void FHAnimInstanceProxy::InitializeObjects(UAnimInstance* InAnimInstance)
@@ -69,8 +73,51 @@ void UJMSShootingAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 	HGetLocationData();
 	HGetRotationData(DeltaSeconds);
 	HUpdateOrientationData();
-	HGetCharacterState();
+	HGetCharacterState(DeltaSeconds);
 	HUpdateRootYawOffset(DeltaSeconds);
+}
+
+void UJMSShootingAnimInstance::NativeBeginPlay()
+{
+	Super::NativeBeginPlay();
+
+	MainChar = Cast<AJMSShootingChar>(GetOwningActor());
+	if (MainChar)
+	{
+		HalfHeight = MainChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	}
+}
+
+void UJMSShootingAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	if (HIsFalling)
+	{
+		if (MainChar)
+		{
+			const FVector start = MainChar->GetActorLocation() - FVector(0, 0, HalfHeight);
+			const FVector end = MainChar->GetActorLocation() - FVector(0, 0, 1000);
+			const TArray<AActor*> ActorsToIgnore;
+			FHitResult OutHit;
+
+			EDrawDebugTrace::Type DrawDebugTrace = EDrawDebugTrace::None;
+			if (JMSDebugOption.ShowJumpData)
+			{
+				DrawDebugTrace = EDrawDebugTrace::ForOneFrame;
+			}
+
+			// bool const bHit = World ? World->SweepSingleByChannel(OutHit, Start, End, FQuat::Identity, CollisionChannel, FCollisionShape::MakeSphere(Radius), Params) : false;
+			// 테스트 용도니 Kismet을 썻지만 Sweep 으로 해야함 
+			const bool hit = UKismetSystemLibrary::SphereTraceSingle(this, start, end, 5.0f, TraceTypeQuery1, false,
+			                                                         ActorsToIgnore,
+			                                                         DrawDebugTrace, OutHit, true);
+			if (hit)
+			{
+				ReceiveGroundDistance(OutHit.Distance);
+			}
+		}
+	}
 }
 
 void UJMSShootingAnimInstance::HGetVelocity()
@@ -209,7 +256,7 @@ E_LocomotionDirection UJMSShootingAnimInstance::HCalculateLocomotionDirection(
 	return E_LocomotionDirection::Left;
 }
 
-void UJMSShootingAnimInstance::HGetCharacterState()
+void UJMSShootingAnimInstance::HGetCharacterState(float DeltaSeconds)
 {
 	HGateSetting.MaxWalkSpeed = HProxy.GateSetting.MaxWalkSpeed;
 	HGateSetting.MaxAcceleration = HProxy.GateSetting.MaxAcceleration;
@@ -272,6 +319,19 @@ void UJMSShootingAnimInstance::HGetCharacterState()
 	else
 	{
 		HTimeToJumpApex = 0.0f;
+	}
+
+	// 떨어지는 시간
+	if (HIsFalling)
+	{
+		HTimeFalling += DeltaSeconds;
+	}
+	else
+	{
+		if (HIsJumping)
+		{
+			HTimeFalling = 0.0f;
+		}
 	}
 }
 
