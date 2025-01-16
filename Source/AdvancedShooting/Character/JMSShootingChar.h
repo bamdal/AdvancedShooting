@@ -96,10 +96,10 @@ protected:
 	bool IsResetIsCanFireFlag = true;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	FTimerHandle FireTimer;
+	FTimerHandle ShootingTimerHandle;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	FTimerHandle FireDelayTimer;
+	FTimerHandle ShootingDelayTimerHandle;
 
 	// Weapon Reload Property -----------------------------------------
 
@@ -141,7 +141,7 @@ protected:
 	void ResetIsCanFire();
 	
 	UFUNCTION(BlueprintCallable)
-	void StopFireAction(const FInputActionValue& InputActionValue);
+	void StopFireAction();
 
 	UFUNCTION(BlueprintCallable)
 	void FirePistol();
@@ -150,7 +150,7 @@ protected:
 	void FireRifle();
 
 	UFUNCTION(BlueprintCallable)
-	void Reload();
+	void ReloadAction();
 	
 	UFUNCTION(BlueprintCallable)
 	void ChangeWeapon(E_Weapon Equipped);

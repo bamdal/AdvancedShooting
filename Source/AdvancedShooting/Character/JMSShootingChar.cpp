@@ -48,7 +48,7 @@ void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this, &AJMSShootingChar::CrouchAction);
 		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &AJMSShootingChar::StartFireAction);
 		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Completed, this, &AJMSShootingChar::StopFireAction);
-		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &AJMSShootingChar::Reload);
+		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &AJMSShootingChar::ReloadAction);
 	}
 }
 
@@ -111,14 +111,14 @@ void AJMSShootingChar::StartFireAction(const FInputActionValue& InputActionValue
 		{
 			IsCanFire = false;
 
-			GetWorld()->GetTimerManager().SetTimer(FireTimer, this, &ThisClass::FirePistol, PistolShootDelay, true, 0);
+			GetWorld()->GetTimerManager().SetTimer(ShootingTimerHandle, this, &ThisClass::FirePistol, PistolShootDelay, true, 0);
 		}
 
 		if (EquippedWeapon == E_Weapon::Rifle)
 		{
 			IsCanFire = false;
 
-			GetWorld()->GetTimerManager().SetTimer(FireTimer, this, &ThisClass::FireRifle, RifleShootDelay, true, 0);
+			GetWorld()->GetTimerManager().SetTimer(ShootingTimerHandle, this, &ThisClass::FireRifle, RifleShootDelay, true, 0);
 		}
 	}
 }
@@ -129,13 +129,13 @@ void AJMSShootingChar::ResetIsCanFire()
 	IsResetIsCanFireFlag = true;
 }
 
-void AJMSShootingChar::StopFireAction(const FInputActionValue& InputActionValue)
+void AJMSShootingChar::StopFireAction()
 {
-		GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+	GetWorld()->GetTimerManager().ClearTimer(ShootingTimerHandle);
 	if (IsResetIsCanFireFlag)
 	{
-		float Shootdelay = EquippedWeapon == E_Weapon::Pistol ? PistolShootDelay : RifleShootDelay;
-		GetWorld()->GetTimerManager().SetTimer(FireDelayTimer, this, &ThisClass::ResetIsCanFire, Shootdelay, false);
+		float ShootDelay = EquippedWeapon == E_Weapon::Pistol ? PistolShootDelay : RifleShootDelay;
+		GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, ShootDelay, false);
 	}
 	IsResetIsCanFireFlag = false;
 }
@@ -162,22 +162,32 @@ void AJMSShootingChar::FireRifle()
 		RifleMesh->PlayAnimation(RifleFireAnim, false);
 }
 
-void AJMSShootingChar::Reload()
+void AJMSShootingChar::ReloadAction()
 {
-	if (EquippedWeapon == E_Weapon::Pistol && PistolReloadAnimMontage && PistolReloadAnim)
+	if (IsCanFire)
 	{
-		AnimInstance->Montage_Play(PistolReloadAnimMontage);
-		PistolMesh->PlayAnimation(PistolReloadAnim, false);
+		IsCanFire = false;
+		IsResetIsCanFireFlag = false;
+		if (EquippedWeapon == E_Weapon::Pistol && PistolReloadAnimMontage && PistolReloadAnim)
+		{
+			AnimInstance->Montage_Play(PistolReloadAnimMontage);
+			PistolMesh->PlayAnimation(PistolReloadAnim, false);
+			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.0f, false);
+		}
+		if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnimMontage && RifleReloadAnim)
+		{
+			AnimInstance->Montage_Play(RifleReloadAnimMontage);
+			PistolMesh->PlayAnimation(RifleReloadAnim, false);
+			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.2f, false);
+		}
+
 	}
-	if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnimMontage && RifleReloadAnim)
-	{
-		AnimInstance->Montage_Play(RifleReloadAnimMontage);
-		PistolMesh->PlayAnimation(RifleReloadAnim, false);
-	}
+
 }
 
 void AJMSShootingChar::ChangeWeapon(E_Weapon Equipped)
 {
+	StopFireAction();
 	FName PistolAttachSocketName = WeaponSockets.PistolUnEquipped;
 	FName RifleAttachSocketName = WeaponSockets.RifleUnEquipped;
 	if (Equipped == E_Weapon::Pistol)
