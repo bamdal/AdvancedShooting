@@ -11,7 +11,6 @@
 
 AJMSShootingChar::AJMSShootingChar()
 {
-
 	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMesh"));
 
 	RifleMesh->SetupAttachment(GetMesh(), WeaponSockets.RifleUnEquipped);
@@ -19,12 +18,16 @@ AJMSShootingChar::AJMSShootingChar()
 
 	PistolMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PistolMesh"));
 	PistolMesh->SetupAttachment(GetMesh(), WeaponSockets.PistolUnEquipped);
+
+	IsCanFire = true;
 }
 
 
 void AJMSShootingChar::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AnimInstance = GetMesh()->GetAnimInstance();
 
 	if (ABP_Unarmed)
 		GetMesh()->LinkAnimClassLayers(ABP_Unarmed);
@@ -43,6 +46,9 @@ void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Started, this, &AJMSShootingChar::AimStarted);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Completed, this, &AJMSShootingChar::AimCompleted);
 		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this, &AJMSShootingChar::CrouchAction);
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &AJMSShootingChar::StartFireAction);
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Completed, this, &AJMSShootingChar::StopFireAction);
+		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &AJMSShootingChar::Reload);
 	}
 }
 
@@ -94,6 +100,79 @@ void AJMSShootingChar::CrouchAction(const FInputActionValue& InputActionValue)
 	{
 		UpdateGate(E_Gate::Jogging);
 		UnCrouch();
+	}
+}
+
+void AJMSShootingChar::StartFireAction(const FInputActionValue& InputActionValue)
+{
+	if (IsCanFire && CurrentGate != E_Gate::Jogging)
+	{
+		if (EquippedWeapon == E_Weapon::Pistol)
+		{
+			IsCanFire = false;
+
+			GetWorld()->GetTimerManager().SetTimer(FireTimer, this, &ThisClass::FirePistol, PistolShootDelay, true, 0);
+		}
+
+		if (EquippedWeapon == E_Weapon::Rifle)
+		{
+			IsCanFire = false;
+
+			GetWorld()->GetTimerManager().SetTimer(FireTimer, this, &ThisClass::FireRifle, RifleShootDelay, true, 0);
+		}
+	}
+}
+
+void AJMSShootingChar::ResetIsCanFire()
+{
+	IsCanFire = true;
+	IsResetIsCanFireFlag = true;
+}
+
+void AJMSShootingChar::StopFireAction(const FInputActionValue& InputActionValue)
+{
+		GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+	if (IsResetIsCanFireFlag)
+	{
+		float Shootdelay = EquippedWeapon == E_Weapon::Pistol ? PistolShootDelay : RifleShootDelay;
+		GetWorld()->GetTimerManager().SetTimer(FireDelayTimer, this, &ThisClass::ResetIsCanFire, Shootdelay, false);
+	}
+	IsResetIsCanFireFlag = false;
+}
+
+void AJMSShootingChar::FirePistol()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("PistolShoot"));
+	if (AnimInstance && PistolFireAnimMontage)
+	{
+		AnimInstance->Montage_Play(PistolFireAnimMontage);
+	}
+	if (PistolFireAnim)
+		PistolMesh->PlayAnimation(PistolFireAnim, false);
+}
+
+void AJMSShootingChar::FireRifle()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("RifleShoot"));
+	if (AnimInstance && RifleFireAnimMontage)
+	{
+		AnimInstance->Montage_Play(RifleFireAnimMontage);
+	}
+	if (RifleFireAnim)
+		RifleMesh->PlayAnimation(RifleFireAnim, false);
+}
+
+void AJMSShootingChar::Reload()
+{
+	if (EquippedWeapon == E_Weapon::Pistol && PistolReloadAnimMontage && PistolReloadAnim)
+	{
+		AnimInstance->Montage_Play(PistolReloadAnimMontage);
+		PistolMesh->PlayAnimation(PistolReloadAnim, false);
+	}
+	if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnimMontage && RifleReloadAnim)
+	{
+		AnimInstance->Montage_Play(RifleReloadAnimMontage);
+		PistolMesh->PlayAnimation(RifleReloadAnim, false);
 	}
 }
 
