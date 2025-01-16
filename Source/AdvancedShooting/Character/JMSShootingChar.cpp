@@ -5,11 +5,20 @@
 
 #include "EnhancedInputComponent.h"
 #include "JMSShootingAnimInstance.h"
+#include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
 AJMSShootingChar::AJMSShootingChar()
 {
+
+	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMesh"));
+
+	RifleMesh->SetupAttachment(GetMesh(), WeaponSockets.RifleUnEquipped);
+
+
+	PistolMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PistolMesh"));
+	PistolMesh->SetupAttachment(GetMesh(), WeaponSockets.PistolUnEquipped);
 }
 
 
@@ -33,7 +42,7 @@ void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 		                                   &AJMSShootingChar::SwitchWeapon);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Started, this, &AJMSShootingChar::AimStarted);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Completed, this, &AJMSShootingChar::AimCompleted);
-		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this,&AJMSShootingChar::CrouchAction);
+		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this, &AJMSShootingChar::CrouchAction);
 	}
 }
 
@@ -61,6 +70,7 @@ void AJMSShootingChar::SwitchWeapon(const FInputActionValue& InputActionValue)
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("JMSShootingChar EquipGun Null")));
 		break;
 	}
+	ChangeWeapon(EquippedWeapon);
 }
 
 void AJMSShootingChar::AimStarted(const FInputActionValue& InputActionValue)
@@ -75,7 +85,7 @@ void AJMSShootingChar::AimCompleted(const FInputActionValue& InputActionValue)
 
 void AJMSShootingChar::CrouchAction(const FInputActionValue& InputActionValue)
 {
-	if (CurrentGate == E_Gate::Walking||CurrentGate == E_Gate::Jogging)
+	if (CurrentGate == E_Gate::Walking || CurrentGate == E_Gate::Jogging)
 	{
 		UpdateGate(E_Gate::Crouch);
 		Crouch();
@@ -87,11 +97,30 @@ void AJMSShootingChar::CrouchAction(const FInputActionValue& InputActionValue)
 	}
 }
 
+void AJMSShootingChar::ChangeWeapon(E_Weapon Equipped)
+{
+	FName PistolAttachSocketName = WeaponSockets.PistolUnEquipped;
+	FName RifleAttachSocketName = WeaponSockets.RifleUnEquipped;
+	if (Equipped == E_Weapon::Pistol)
+	{
+		PistolAttachSocketName = WeaponSockets.WeaponEquipped;
+	}
+	else if (EquippedWeapon == E_Weapon::Rifle)
+	{
+		RifleAttachSocketName = WeaponSockets.WeaponEquipped;
+	}
+
+	RifleMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale,
+	                             RifleAttachSocketName);
+	PistolMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale,
+	                              PistolAttachSocketName);
+}
+
 void AJMSShootingChar::UpdateGate(E_Gate Gate)
 {
 	CurrentGate = Gate;
 
- 	UJMSShootingAnimInstance* ShootingAnimInstance = Cast<UJMSShootingAnimInstance>(GetMesh()->GetAnimInstance());
+	UJMSShootingAnimInstance* ShootingAnimInstance = Cast<UJMSShootingAnimInstance>(GetMesh()->GetAnimInstance());
 	FGateSetting* GateSettingInfo = GateSettings.Find(CurrentGate);
 	if (ShootingAnimInstance && GateSettingInfo)
 	{

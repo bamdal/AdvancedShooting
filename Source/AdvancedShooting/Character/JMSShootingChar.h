@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "JMSCharBase.h"
 #include "AdvancedShooting/Enum/JMSEnum.h"
-#include "AdvancedShooting/Interface/ABPas.h"
 #include "AdvancedShooting/Struct/GateSetting.h"
+#include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "JMSShootingChar.generated.h"
 
 
@@ -53,6 +53,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ABP")
 	TSubclassOf<UAnimInstance> ABP_Rifle;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	TObjectPtr<USkeletalMeshComponent> RifleMesh;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	TObjectPtr<USkeletalMeshComponent> PistolMesh;
+
+	UPROPERTY()
+	FWeaponSocket WeaponSockets;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -72,6 +81,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void CrouchAction(const FInputActionValue& InputActionValue);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeWeapon(E_Weapon Equipped);
 protected:
 	// 애니메이션 --------------------------------------
 
