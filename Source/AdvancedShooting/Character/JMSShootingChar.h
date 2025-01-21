@@ -7,6 +7,7 @@
 #include "AdvancedShooting/Enum/JMSEnum.h"
 #include "AdvancedShooting/Struct/GateSetting.h"
 #include "AdvancedShooting/Struct/WeaponSocket.h"
+#include "Components/TimelineComponent.h"
 #include "JMSShootingChar.generated.h"
 
 
@@ -79,15 +80,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	float RifleShootDelay = 0.2f;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> PistolFireAnimMontage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> RifleFireAnimMontage;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	TObjectPtr<UAnimationAsset> PistolFireAnim;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	TObjectPtr<UAnimationAsset> RifleFireAnim;
 	
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
@@ -117,6 +110,8 @@ protected:
 protected:
 
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 	
 	// 입력 ------------------------------
 
@@ -157,7 +152,63 @@ protected:
 protected:
 	// 애니메이션 --------------------------------------
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	TObjectPtr<UAnimMontage> PistolFireAnimMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	TObjectPtr<UAnimMontage> RifleFireAnimMontage;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	TObjectPtr<UAnimationAsset> PistolFireAnim;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	TObjectPtr<UAnimationAsset> RifleFireAnim;
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateGate(E_Gate Gate);
 
+	UFUNCTION(BlueprintCallable)
+	void JMSPlayMontage(UAnimMontage* Montage);
+
+	UFUNCTION(BlueprintCallable)
+	void JMSPlayAnimation(USkeletalMeshComponent* Weapon, UAnimationAsset* AnimSequence, bool bLoop);
+
+	// 사운드 --------------------------------------
+	
+	UFUNCTION(BlueprintCallable)
+	void JMSPlaySound(USkinnedMeshComponent* Weapon, USoundBase* Sound, FName BoneName);
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	USoundBase* SoundPistolFire;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	USoundBase* SoundRifleFire;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	USoundBase* SoundPistolReload;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	USoundBase* SoundRifleReload;
+
+protected:
+	// 조준 --------------------------------------------------
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	bool IsAiming = false;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	TObjectPtr<UCurveFloat> AimCurveData;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	float DesiredTargetArmLengthZoomIn = 400.0f;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	float DesiredTargetArmLengthZoomOut = 500.0f;
+	
+	UPROPERTY()
+	FTimeline AimTimeline;
+
+	UFUNCTION(BlueprintCallable)
+	void OnAimUpdate(float Alpha);
+
+	// 발사 ------------------------------------------------------------------
+	UFUNCTION(BlueprintCallable)
+	void JMSFireLineTraceProc(USkinnedMeshComponent* Weapon);
 };

@@ -7,6 +7,8 @@
 #include "JMSShootingAnimInstance.h"
 #include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 AJMSShootingChar::AJMSShootingChar()
@@ -33,6 +35,20 @@ void AJMSShootingChar::BeginPlay()
 		GetMesh()->LinkAnimClassLayers(ABP_Unarmed);
 	CurrentGate = E_Gate::Jogging;
 	UpdateGate(CurrentGate);
+
+
+	FOnTimelineFloat AimDelegate;
+	AimDelegate.BindUFunction(this,TEXT("OnAimUpdate"));
+
+	// TimeLine에 함수 델리게이트로 연결
+	AimTimeline.AddInterpFloat(AimCurveData, AimDelegate,TEXT("OnTimelineFloat"));
+}
+
+void AJMSShootingChar::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	AimTimeline.TickTimeline(DeltaSeconds);
 }
 
 void AJMSShootingChar::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -81,12 +97,30 @@ void AJMSShootingChar::SwitchWeapon(const FInputActionValue& InputActionValue)
 
 void AJMSShootingChar::AimStarted(const FInputActionValue& InputActionValue)
 {
-	UpdateGate(E_Gate::Walking);
+	if (CurrentGate == E_Gate::Walking || CurrentGate == E_Gate::Jogging)
+	{
+		UpdateGate(E_Gate::Walking);
+	}
+	else if (CurrentGate == E_Gate::Crouch)
+	{
+		UpdateGate(E_Gate::Crouch);
+	}
+	IsAiming = true;
+	AimTimeline.PlayFromStart();
 }
 
 void AJMSShootingChar::AimCompleted(const FInputActionValue& InputActionValue)
 {
-	UpdateGate(E_Gate::Jogging);
+	if (CurrentGate == E_Gate::Walking || CurrentGate == E_Gate::Jogging)
+	{
+		UpdateGate(E_Gate::Jogging);
+		IsAiming = false;
+	}
+	else if (CurrentGate == E_Gate::Crouch)
+	{
+		UpdateGate(E_Gate::Crouch);
+	}
+	AimTimeline.ReverseFromEnd();
 }
 
 void AJMSShootingChar::CrouchAction(const FInputActionValue& InputActionValue)
@@ -99,26 +133,29 @@ void AJMSShootingChar::CrouchAction(const FInputActionValue& InputActionValue)
 	else
 	{
 		UpdateGate(E_Gate::Jogging);
+		IsAiming = false;
 		UnCrouch();
 	}
 }
 
 void AJMSShootingChar::StartFireAction(const FInputActionValue& InputActionValue)
 {
-	if (IsCanFire && CurrentGate != E_Gate::Jogging)
+	if (IsCanFire && IsAiming)
 	{
 		if (EquippedWeapon == E_Weapon::Pistol)
 		{
 			IsCanFire = false;
 
-			GetWorld()->GetTimerManager().SetTimer(ShootingTimerHandle, this, &ThisClass::FirePistol, PistolShootDelay, true, 0);
+			GetWorld()->GetTimerManager().SetTimer(ShootingTimerHandle, this, &ThisClass::FirePistol, PistolShootDelay,
+			                                       true, 0);
 		}
 
 		if (EquippedWeapon == E_Weapon::Rifle)
 		{
 			IsCanFire = false;
 
-			GetWorld()->GetTimerManager().SetTimer(ShootingTimerHandle, this, &ThisClass::FireRifle, RifleShootDelay, true, 0);
+			GetWorld()->GetTimerManager().SetTimer(ShootingTimerHandle, this, &ThisClass::FireRifle, RifleShootDelay,
+			                                       true, 0);
 		}
 	}
 }
@@ -135,31 +172,54 @@ void AJMSShootingChar::StopFireAction()
 	if (IsResetIsCanFireFlag)
 	{
 		float ShootDelay = EquippedWeapon == E_Weapon::Pistol ? PistolShootDelay : RifleShootDelay;
-		GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, ShootDelay, false);
+		GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, ShootDelay,
+		                                       false);
 	}
 	IsResetIsCanFireFlag = false;
 }
 
 void AJMSShootingChar::FirePistol()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("PistolShoot"));
-	if (AnimInstance && PistolFireAnimMontage)
-	{
-		AnimInstance->Montage_Play(PistolFireAnimMontage);
-	}
-	if (PistolFireAnim)
-		PistolMesh->PlayAnimation(PistolFireAnim, false);
+	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("AJMSShootingChar PistolShoot"));
+
+	JMSPlayMontage(PistolFireAnimMontage);
+	JMSPlayAnimation(PistolMesh, PistolFireAnim, false);
+	JMSPlaySound(PistolMesh, SoundPistolFire,TEXT("Barrel"));
+	JMSFireLineTraceProc(PistolMesh);
 }
 
 void AJMSShootingChar::FireRifle()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("RifleShoot"));
-	if (AnimInstance && RifleFireAnimMontage)
+	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("AJMSShootingChar RifleShoot"));
+
+	JMSPlayMontage(RifleFireAnimMontage);
+	JMSPlayAnimation(RifleMesh, RifleFireAnim, false);
+	JMSPlaySound(PistolMesh, SoundRifleFire,TEXT("Barrel"));
+	JMSFireLineTraceProc(RifleMesh);
+}
+
+void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
+{
+	if (Weapon == nullptr)
+		return;
+
+
+	FTransform Trans = Weapon->GetSocketTransform(TEXT("Muzzle"), RTS_World);
+	FVector Start = Trans.GetLocation();
+	FVector End = Trans.GetLocation() + Trans.GetRotation().GetForwardVector() * 10000000;
+	TArray<AActor*> ActorToIgnore;
+	FHitResult HitResult;
+	bool bHit = UKismetSystemLibrary::LineTraceSingle(this, Start, End, TraceTypeQuery1, false, ActorToIgnore,
+	                                                  EDrawDebugTrace::ForDuration, HitResult, true);
+	if (bHit)
 	{
-		AnimInstance->Montage_Play(RifleFireAnimMontage);
+		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Purple,
+		                                 FString::Printf(
+			                                 TEXT("%s ,%s ,%s ,%s ,%s , "), *HitResult.ImpactPoint.ToString(),
+			                                 *HitResult.ImpactNormal.ToString(), *HitResult.Normal.ToString(),
+			                                 *HitResult.PhysMaterial->GetName(),
+			                                 *HitResult.HitObjectHandle.GetName()));;
 	}
-	if (RifleFireAnim)
-		RifleMesh->PlayAnimation(RifleFireAnim, false);
 }
 
 void AJMSShootingChar::ReloadAction()
@@ -168,21 +228,23 @@ void AJMSShootingChar::ReloadAction()
 	{
 		IsCanFire = false;
 		IsResetIsCanFireFlag = false;
-		if (EquippedWeapon == E_Weapon::Pistol && PistolReloadAnimMontage && PistolReloadAnim)
+		if (EquippedWeapon == E_Weapon::Pistol)
 		{
-			AnimInstance->Montage_Play(PistolReloadAnimMontage);
-			PistolMesh->PlayAnimation(PistolReloadAnim, false);
-			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.0f, false);
+			JMSPlayMontage(PistolReloadAnimMontage);
+			JMSPlayAnimation(PistolMesh, PistolReloadAnim, false);
+			JMSPlaySound(PistolMesh, SoundPistolReload,TEXT("Barrel"));
+			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.0f,
+			                                       false);
 		}
-		if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnimMontage && RifleReloadAnim)
+		if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnim)
 		{
-			AnimInstance->Montage_Play(RifleReloadAnimMontage);
-			PistolMesh->PlayAnimation(RifleReloadAnim, false);
-			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.2f, false);
+			JMSPlayMontage(RifleReloadAnimMontage);
+			JMSPlayAnimation(RifleMesh, RifleReloadAnim, false);
+			JMSPlaySound(RifleMesh, SoundRifleReload,TEXT("Barrel"));
+			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.2f,
+			                                       false);
 		}
-
 	}
-
 }
 
 void AJMSShootingChar::ChangeWeapon(E_Weapon Equipped)
@@ -222,4 +284,40 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 		GetCharacterMovement()->GroundFriction = GateSettingInfo->GroundFriction;
 		GetCharacterMovement()->bUseSeparateBrakingFriction = GateSettingInfo->bUseSeparateBrakingFriction;
 	}
+}
+
+void AJMSShootingChar::JMSPlayMontage(UAnimMontage* Montage)
+{
+	if (Montage == nullptr || AnimInstance == nullptr)
+		return;
+
+	AnimInstance->Montage_Play(Montage);
+}
+
+void AJMSShootingChar::JMSPlayAnimation(USkeletalMeshComponent* Weapon, UAnimationAsset* AnimSequence, bool bLoop)
+{
+	if (Weapon == nullptr || AnimSequence == nullptr)
+		return;
+	Weapon->PlayAnimation(AnimSequence, bLoop);
+}
+
+void AJMSShootingChar::JMSPlaySound(USkinnedMeshComponent* Weapon, USoundBase* Sound, FName BoneName)
+{
+	if (Weapon == nullptr || Sound == nullptr)
+		return;
+
+	FTransform SpawnTransform = Weapon->GetSocketTransform(BoneName, RTS_World);
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, SpawnTransform.GetLocation());
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
+	                                 FString::Printf(TEXT("AJMSShootingChar %s"), *Sound->GetName()));
+}
+
+void AJMSShootingChar::OnAimUpdate(float Alpha)
+{
+	float ZoomOut = FMath::Max(GetCameraBoom()->TargetArmLength, DesiredTargetArmLengthZoomOut);
+	float ZoomIn = FMath::Min(GetCameraBoom()->TargetArmLength, DesiredTargetArmLengthZoomIn);
+
+
+	float CurrentLength = FMath::Lerp(ZoomOut, ZoomIn, Alpha);
+	GetCameraBoom()->TargetArmLength = CurrentLength;
 }
