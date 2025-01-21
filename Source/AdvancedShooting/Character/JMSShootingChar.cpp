@@ -180,7 +180,7 @@ void AJMSShootingChar::StopFireAction()
 
 void AJMSShootingChar::FirePistol()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("AJMSShootingChar PistolShoot"));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("AJMSShootingChar PistolShoot"));
 
 	JMSPlayMontage(PistolFireAnimMontage);
 	JMSPlayAnimation(PistolMesh, PistolFireAnim, false);
@@ -190,11 +190,11 @@ void AJMSShootingChar::FirePistol()
 
 void AJMSShootingChar::FireRifle()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("AJMSShootingChar RifleShoot"));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,TEXT("AJMSShootingChar RifleShoot"));
 
 	JMSPlayMontage(RifleFireAnimMontage);
 	JMSPlayAnimation(RifleMesh, RifleFireAnim, false);
-	JMSPlaySound(PistolMesh, SoundRifleFire,TEXT("Barrel"));
+	JMSPlaySound(RifleMesh, SoundRifleFire,TEXT("Barrel"));
 	JMSFireLineTraceProc(RifleMesh);
 }
 
@@ -210,7 +210,7 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 	TArray<AActor*> ActorToIgnore;
 	FHitResult HitResult;
 	bool bHit = UKismetSystemLibrary::LineTraceSingle(this, Start, End, TraceTypeQuery1, false, ActorToIgnore,
-	                                                  EDrawDebugTrace::ForDuration, HitResult, true);
+	                                                  EDrawDebugTrace::ForOneFrame, HitResult, true);
 	if (bHit)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Purple,
@@ -219,8 +219,39 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 			                                 *HitResult.ImpactNormal.ToString(), *HitResult.Normal.ToString(),
 			                                 *HitResult.PhysMaterial->GetName(),
 			                                 *HitResult.HitObjectHandle.GetName()));;
+
+		JMSImpactSound(HitResult.ImpactPoint, HitResult.PhysMaterial.Get());
 	}
 }
+
+void AJMSShootingChar::JMSImpactSound(FVector ImpactLocation, UPhysicalMaterial* ImpactMaterial)
+{
+	if (ImpactMaterial == nullptr)
+		return;
+
+	switch (ImpactMaterial->SurfaceType)
+	{
+	case SurfaceType1:
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, MSPImpactsGlass, ImpactLocation);
+			UGameplayStatics::PlaySoundAtLocation(this, MSPImpactsGlassDebris, ImpactLocation);
+			break;
+		}
+	case SurfaceType2:
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, MSPImpactsPlaster, ImpactLocation);
+			UGameplayStatics::PlaySoundAtLocation(this, MSPImpactsPlasterDebris, ImpactLocation);
+			break;
+		}
+	default:
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, MSPImpactsPlaster, ImpactLocation);
+			UGameplayStatics::PlaySoundAtLocation(this, MSPImpactsPlasterDebris, ImpactLocation);
+			break;;
+		}
+	}
+}
+
 
 void AJMSShootingChar::ReloadAction()
 {
@@ -232,7 +263,7 @@ void AJMSShootingChar::ReloadAction()
 		{
 			JMSPlayMontage(PistolReloadAnimMontage);
 			JMSPlayAnimation(PistolMesh, PistolReloadAnim, false);
-			JMSPlaySound(PistolMesh, SoundPistolReload,TEXT("Barrel"));
+			//JMSPlaySound(PistolMesh, SoundPistolReload,TEXT("Barrel"));
 			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.0f,
 			                                       false);
 		}
@@ -240,7 +271,7 @@ void AJMSShootingChar::ReloadAction()
 		{
 			JMSPlayMontage(RifleReloadAnimMontage);
 			JMSPlayAnimation(RifleMesh, RifleReloadAnim, false);
-			JMSPlaySound(RifleMesh, SoundRifleReload,TEXT("Barrel"));
+			//JMSPlaySound(RifleMesh, SoundRifleReload,TEXT("Barrel"));
 			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.2f,
 			                                       false);
 		}
@@ -309,7 +340,7 @@ void AJMSShootingChar::JMSPlaySound(USkinnedMeshComponent* Weapon, USoundBase* S
 	FTransform SpawnTransform = Weapon->GetSocketTransform(BoneName, RTS_World);
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, SpawnTransform.GetLocation());
 	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
-	                                 FString::Printf(TEXT("AJMSShootingChar %s"), *Sound->GetName()));
+	                                 FString::Printf(TEXT("AJMSShootingChar Sound %s"), *Sound->GetName()));
 }
 
 void AJMSShootingChar::OnAimUpdate(float Alpha)

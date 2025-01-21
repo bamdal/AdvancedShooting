@@ -35,7 +35,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Fire;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* IA_Reload;
 
@@ -62,57 +62,52 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<USkeletalMeshComponent> RifleMesh;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<USkeletalMeshComponent> PistolMesh;
 
 	// Weapon Shoot Property ---------------------------------------------
-	
+
 	UPROPERTY(EditAnywhere)
 	FWeaponSocket WeaponSockets;
 
 	UPROPERTY(EditAnywhere)
 	UAnimInstance* AnimInstance;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PistolShootDelay = 0.5f;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RifleShootDelay = 0.2f;
 
 
-	
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsCanFire = true;
 
 	bool IsResetIsCanFireFlag = true;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTimerHandle ShootingTimerHandle;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTimerHandle ShootingDelayTimerHandle;
 
 	// Weapon Reload Property -----------------------------------------
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimMontage> PistolReloadAnimMontage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimMontage> RifleReloadAnimMontage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimationAsset> PistolReloadAnim;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimationAsset> RifleReloadAnim;
-	
-	
 
 protected:
-
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
-	
+
 	// 입력 ------------------------------
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -134,32 +129,33 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetIsCanFire();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void StopFireAction();
 
 	UFUNCTION(BlueprintCallable)
 	void FirePistol();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void FireRifle();
 
 	UFUNCTION(BlueprintCallable)
 	void ReloadAction();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void ChangeWeapon(E_Weapon Equipped);
+
 protected:
 	// 애니메이션 --------------------------------------
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooting")
 	TObjectPtr<UAnimMontage> PistolFireAnimMontage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooting")
 	TObjectPtr<UAnimMontage> RifleFireAnimMontage;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooting")
 	TObjectPtr<UAnimationAsset> PistolFireAnim;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooting")
 	TObjectPtr<UAnimationAsset> RifleFireAnim;
 
 	UFUNCTION(BlueprintCallable)
@@ -172,36 +168,48 @@ protected:
 	void JMSPlayAnimation(USkeletalMeshComponent* Weapon, UAnimationAsset* AnimSequence, bool bLoop);
 
 	// 사운드 --------------------------------------
-	
+
 	UFUNCTION(BlueprintCallable)
 	void JMSPlaySound(USkinnedMeshComponent* Weapon, USoundBase* Sound, FName BoneName);
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
 	USoundBase* SoundPistolFire;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
 	USoundBase* SoundRifleFire;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
 	USoundBase* SoundPistolReload;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
 	USoundBase* SoundRifleReload;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
+	USoundBase* MSPImpactsPlaster;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
+	USoundBase* MSPImpactsPlasterDebris;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
+	USoundBase* MSPImpactsGlass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
+	USoundBase* MSPImpactsGlassDebris;
 
 protected:
 	// 조준 --------------------------------------------------
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aim")
 	bool IsAiming = false;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aim")
 	TObjectPtr<UCurveFloat> AimCurveData;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aim")
 	float DesiredTargetArmLengthZoomIn = 400.0f;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aim")
 	float DesiredTargetArmLengthZoomOut = 500.0f;
-	
+
 	UPROPERTY()
 	FTimeline AimTimeline;
 
@@ -211,4 +219,10 @@ protected:
 	// 발사 ------------------------------------------------------------------
 	UFUNCTION(BlueprintCallable)
 	void JMSFireLineTraceProc(USkinnedMeshComponent* Weapon);
+
+
+	
+	UFUNCTION(BlueprintCallable)
+	void JMSImpactSound(FVector ImpactLocation,UPhysicalMaterial* ImpactMaterial);
+
 };
