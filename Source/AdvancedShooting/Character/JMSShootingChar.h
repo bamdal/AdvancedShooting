@@ -221,6 +221,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnAimUpdate(float Alpha);
 
+	UFUNCTION(BlueprintCallable,BlueprintPure)
+	FVector GetAimLocation(USkinnedMeshComponent* Weapon);
+
 	// 발사 ------------------------------------------------------------------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
@@ -244,6 +247,29 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void JMSImpactSound(FVector ImpactLocation,UPhysicalMaterial* ImpactMaterial);
 
-	
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float PistolClipSize;		// 탄창에 들어가는 총알 최대 수
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float PistolClipAmount;		// 탄창의 개수
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float PistolBulletAmount;	// 탄창에 남은 총알 갯수
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float RifleClipSize;		// 탄창에 들어가는 총알 최대 수
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float RifleClipAmount;		// 탄창의 개수
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float RifleBulletAmount;	// 탄창에 남은 총알 갯수
+
+protected:
+	UFUNCTION(BlueprintCallable)
+	bool PistolBulletManager();
+	
+	UFUNCTION(BlueprintCallable)
+	bool RifleBulletManager();
 };
