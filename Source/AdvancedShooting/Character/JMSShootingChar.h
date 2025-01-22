@@ -8,6 +8,8 @@
 #include "AdvancedShooting/Struct/GateSetting.h"
 #include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "Components/TimelineComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "JMSShootingChar.generated.h"
 
 
@@ -220,12 +222,28 @@ protected:
 	void OnAimUpdate(float Alpha);
 
 	// 발사 ------------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Shooting")
+ 	class UNiagaraSystem* NSWeaponFire;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	class UNiagaraSystem* NSImpactConcrete;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Shooting")
+	class UNiagaraSystem* NSImpactGlass;
 	UFUNCTION(BlueprintCallable)
 	void JMSFireLineTraceProc(USkinnedMeshComponent* Weapon);
-
-
+	
+	
+	UFUNCTION(BlueprintCallable)
+	void JMSFireTraceEffect(FVector ImpactPoint);
+	
+	UFUNCTION(BlueprintCallable)
+	void JMSFireImpactEffect(UPhysicalMaterial* ImpactMaterial, FVector ImpactNormal, FVector ImpactPoint);
 	
 	UFUNCTION(BlueprintCallable)
 	void JMSImpactSound(FVector ImpactLocation,UPhysicalMaterial* ImpactMaterial);
+
+	
 
 };

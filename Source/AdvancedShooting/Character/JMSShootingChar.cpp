@@ -7,6 +7,8 @@
 #include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -199,6 +201,7 @@ void AJMSShootingChar::FireRifle()
 	JMSFireLineTraceProc(RifleMesh);
 }
 
+
 void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 {
 	if (Weapon == nullptr)
@@ -211,7 +214,7 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 	TArray<AActor*> ActorToIgnore;
 	FHitResult HitResult;
 	bool bHit = UKismetSystemLibrary::LineTraceSingle(this, Start, End, TraceTypeQuery1, false, ActorToIgnore,
-	                                                  EDrawDebugTrace::ForOneFrame, HitResult, true);
+	                                                  EDrawDebugTrace::None, HitResult, true);
 	if (bHit)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Purple,
@@ -221,8 +224,87 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 			                                 *HitResult.PhysMaterial->GetName(),
 			                                 *HitResult.HitObjectHandle.GetName()));;
 
+		// 총알 충돌지점 별로 사운드 출력
 		JMSImpactSound(HitResult.ImpactPoint, HitResult.PhysMaterial.Get());
+
+		// 총 궤적 이펙트(나이아가라)
+		JMSFireTraceEffect(HitResult.ImpactPoint);
+
+		// 총알 피격 이펙트(믈리 머티리얼별 선별 처리)
+		JMSFireImpactEffect(HitResult.PhysMaterial.Get(), HitResult.ImpactNormal, HitResult.ImpactPoint);
 	}
+	else
+	{
+		JMSFireTraceEffect(End);
+	}
+}
+
+void AJMSShootingChar::JMSFireTraceEffect(FVector ImpactPoint)
+{
+	USceneComponent* AttachToComponent = nullptr;
+	if (EquippedWeapon == E_Weapon::Pistol)
+	{
+		AttachToComponent = PistolMesh;
+	}
+	else if (EquippedWeapon == E_Weapon::Rifle)
+	{
+		AttachToComponent = RifleMesh;
+	}
+
+	if (AttachToComponent == nullptr || NSWeaponFire == nullptr)
+		return;
+
+	UNiagaraComponent* NComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		NSWeaponFire, AttachToComponent,TEXT("Muzzle"), FVector::Zero(),
+		FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
+
+	if (NComp == nullptr)
+		return;
+
+	TArray<FVector> ArrayData;
+	ArrayData.Add(ImpactPoint);
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(NComp,TEXT("User.ImpactPositions"), ArrayData);
+}
+
+void AJMSShootingChar::JMSFireImpactEffect(UPhysicalMaterial* ImpactMaterial, FVector ImpactNormal, FVector ImpactPoint)
+{
+	if (ImpactMaterial == nullptr)
+		return;
+
+	UNiagaraSystem* NTemp = nullptr;
+	switch (ImpactMaterial->SurfaceType)
+	{
+	case SurfaceType1:
+		{
+			NTemp = NSImpactGlass;
+			break;
+		}
+	case SurfaceType2:
+		{
+			NTemp = NSImpactConcrete;
+			break;
+		}
+	default:
+		{
+			NTemp = NSImpactConcrete;
+			break;;
+		}
+	}
+	if (NTemp == nullptr)
+		return;
+	
+	UNiagaraComponent* NComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this,NTemp,FVector::Zero(),FRotator::ZeroRotator);
+	if (NComp == nullptr)
+		return;
+	
+	TArray<FVector> ArrayNormalData;
+	ArrayNormalData.Add(ImpactNormal);
+	
+	TArray<FVector> ArrayPosData;
+	ArrayPosData.Add(ImpactPoint);
+
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(NComp,TEXT("User.ImpactNormals"), ArrayNormalData);
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayPosition(NComp,TEXT("User.ImpactPositions"), ArrayPosData);
 }
 
 void AJMSShootingChar::JMSImpactSound(FVector ImpactLocation, UPhysicalMaterial* ImpactMaterial)
@@ -345,7 +427,8 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 					}
 				default: break;
 				}
-			}break;
+			}
+			break;
 		case E_Gate::Jogging:
 			{
 				switch (EquippedWeapon)
@@ -367,7 +450,8 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 					}
 				default: break;
 				}
-			}break;
+			}
+			break;
 		case E_Gate::Crouch:
 			{
 				IsCrouched = true;
@@ -390,7 +474,8 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 					}
 				default: break;
 				}
-			}break;
+			}
+			break;
 		default: break;
 		}
 
