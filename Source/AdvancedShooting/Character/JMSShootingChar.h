@@ -51,6 +51,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gate")
 	TMap<E_Gate, FGateSetting> GateSettings;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gate")
+	UDataTable* GateSettingTable;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ABP")
 	TSubclassOf<UAnimInstance> ABP_Unarmed;
 

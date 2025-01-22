@@ -125,6 +125,7 @@ void UJMSShootingAnimInstance::HGetVelocity()
 {
 	HCharacterVelocity = HProxy.Velocity;
 	HCharacterVelocity2D = FVector(HCharacterVelocity.X, HCharacterVelocity.Y, 0);
+	HCharacterVelocityLength = HProxy.Velocity.Length();
 }
 
 void UJMSShootingAnimInstance::HGetAccelerationData()

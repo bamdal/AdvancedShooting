@@ -2,7 +2,6 @@
 
 
 #include "JMSShootingChar.h"
-
 #include "EnhancedInputComponent.h"
 #include "JMSShootingAnimInstance.h"
 #include "AdvancedShooting/Struct/WeaponSocket.h"
@@ -20,6 +19,7 @@ AJMSShootingChar::AJMSShootingChar()
 
 	PistolMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PistolMesh"));
 	PistolMesh->SetupAttachment(GetMesh(), WeaponSockets.PistolUnEquipped);
+
 
 	IsCanFire = true;
 }
@@ -93,6 +93,7 @@ void AJMSShootingChar::SwitchWeapon(const FInputActionValue& InputActionValue)
 		break;
 	}
 	ChangeWeapon(EquippedWeapon);
+	UpdateGate(CurrentGate);
 }
 
 void AJMSShootingChar::AimStarted(const FInputActionValue& InputActionValue)
@@ -303,7 +304,8 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 	CurrentGate = Gate;
 
 	UJMSShootingAnimInstance* ShootingAnimInstance = Cast<UJMSShootingAnimInstance>(GetMesh()->GetAnimInstance());
-	FGateSetting* GateSettingInfo = GateSettings.Find(CurrentGate);
+
+	/*FGateSetting* GateSettingInfo = GateSettings.Find(CurrentGate);
 	if (ShootingAnimInstance && GateSettingInfo)
 	{
 		ShootingAnimInstance->ReceiveCurrentGate(CurrentGate);
@@ -314,6 +316,97 @@ void AJMSShootingChar::UpdateGate(E_Gate Gate)
 		GetCharacterMovement()->BrakingFriction = GateSettingInfo->BrakingFriction;
 		GetCharacterMovement()->GroundFriction = GateSettingInfo->GroundFriction;
 		GetCharacterMovement()->bUseSeparateBrakingFriction = GateSettingInfo->bUseSeparateBrakingFriction;
+	}*/
+
+	if (GateSettingTable != nullptr)
+	{
+		FGateSetting* Row = nullptr;
+		bool IsCrouched = false;
+		switch (CurrentGate)
+		{
+		case E_Gate::Walking:
+			{
+				switch (EquippedWeapon)
+				{
+				case E_Weapon::UnArmed:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("UnarmedWalk"), FString(""));
+						break;
+					}
+				case E_Weapon::Pistol:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("PistolWalk"), FString(""));
+						break;
+					}
+				case E_Weapon::Rifle:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("RifleWalk"), FString(""));
+						break;
+					}
+				default: break;
+				}
+			}break;
+		case E_Gate::Jogging:
+			{
+				switch (EquippedWeapon)
+				{
+				case E_Weapon::UnArmed:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("UnarmedJog"), FString(""));
+						break;
+					}
+				case E_Weapon::Pistol:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("PistolJog"), FString(""));
+						break;
+					}
+				case E_Weapon::Rifle:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("RifleJog"), FString(""));
+						break;
+					}
+				default: break;
+				}
+			}break;
+		case E_Gate::Crouch:
+			{
+				IsCrouched = true;
+				switch (EquippedWeapon)
+				{
+				case E_Weapon::UnArmed:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("UnarmedCrouch"), FString(""));
+						break;
+					}
+				case E_Weapon::Pistol:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("PistolCrouch"), FString(""));
+						break;
+					}
+				case E_Weapon::Rifle:
+					{
+						Row = GateSettingTable->FindRow<FGateSetting>(TEXT("RifleCrouch"), FString(""));
+						break;
+					}
+				default: break;
+				}
+			}break;
+		default: break;
+		}
+
+		if (Row != nullptr)
+		{
+			ShootingAnimInstance->ReceiveCurrentGate(CurrentGate);
+			GetCharacterMovement()->MaxWalkSpeed = Row->MaxWalkSpeed;
+			if (IsCrouched)
+				GetCharacterMovement()->MaxWalkSpeedCrouched = Row->MaxWalkSpeed;
+			GetCharacterMovement()->MaxAcceleration = Row->MaxAcceleration;
+			GetCharacterMovement()->BrakingDecelerationWalking = Row->BrakingDecelerationWalking;
+			GetCharacterMovement()->BrakingFrictionFactor = Row->BrakingFrictionFactor;
+			GetCharacterMovement()->BrakingFriction = Row->BrakingFriction;
+			GetCharacterMovement()->GroundFriction = Row->GroundFriction;
+			GetCharacterMovement()->bUseSeparateBrakingFriction = Row->bUseSeparateBrakingFriction;
+		}
 	}
 }
 

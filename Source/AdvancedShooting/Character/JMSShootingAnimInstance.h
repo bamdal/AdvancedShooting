@@ -92,6 +92,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HVelocityData)
 	FVector HCharacterVelocity2D;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HVelocityData)
+	float HCharacterVelocityLength;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HVelocityData)
 	float HVelocityLocomotionAngle;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HAccelerationData)

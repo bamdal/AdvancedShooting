@@ -1,10 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "GateSetting.generated.h"
 
 USTRUCT(BlueprintType)
-struct FGateSetting
+struct FGateSetting : public FTableRowBase
 {
 	GENERATED_BODY()
 
