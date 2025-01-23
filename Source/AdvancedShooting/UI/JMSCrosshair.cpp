@@ -31,6 +31,8 @@ void UJMSCrosshair::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 			WidgetTransform.Translation = AdjustedPos;
 
 			Crosshair->SetRenderTransform(WidgetTransform);
+
+
 		}
 	}
 }

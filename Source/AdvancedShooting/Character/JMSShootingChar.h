@@ -12,6 +12,10 @@
 #include "JMSShootingChar.generated.h"
 
 
+class UJMSRifleUI;
+class UJMSPistolUI;
+class UJMSWeaponUI;
+class UWidgetComponent;
 class UJMSCrosshair;
 /**
  * 
@@ -70,6 +74,22 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<USkeletalMeshComponent> PistolMesh;
+
+	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	TObjectPtr<UWidgetComponent> PistolWidgetComponent;
+
+	UPROPERTY()
+	UJMSPistolUI* PistolUI;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	TObjectPtr<UWidgetComponent> RifleWidgetComponent;
+
+	
+	UPROPERTY()
+	UJMSRifleUI* RifleUI;
+
 
 	// Weapon Shoot Property ---------------------------------------------
 
@@ -290,6 +310,11 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
 	bool IsStartReloading = false;	// 리로드 동작 중인지 판단
 
+	UFUNCTION(BlueprintCallable)
+    void PistolVisibleFunc(bool IsVisible) const;
+	
+	UFUNCTION(BlueprintCallable)
+    void RifleVisibleFunc(bool IsVisible) const;
 protected:
 	UFUNCTION(BlueprintCallable)
 	bool PistolBulletManager();

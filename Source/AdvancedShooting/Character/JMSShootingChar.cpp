@@ -10,12 +10,21 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "AdvancedShooting/UI/JMSCrosshair.h"
+#include "AdvancedShooting/UI/JMSPistolUI.h"
+#include "AdvancedShooting/UI/JMSRifleUI.h"
+#include "AdvancedShooting/UI/JMSWeaponUI.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 
 AJMSShootingChar::AJMSShootingChar()
 {
+	PistolClipSize = 10;
+	PistolClipAmount = 2;
+	RifleClipSize = 10;
+	RifleClipAmount = 2;
+	
 	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMesh"));
 
 	RifleMesh->SetupAttachment(GetMesh(), WeaponSockets.RifleUnEquipped);
@@ -27,8 +36,15 @@ AJMSShootingChar::AJMSShootingChar()
 
 	Pistol_ReloadMontageEnded.BindUObject(this,&AJMSShootingChar::OnPistolReloadEnded);
 	Rifle_ReloadMontageEnded.BindUObject(this,&ThisClass::OnRifleReloadEnded);
-	
 
+	PistolWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("PistolWidget"));
+	PistolWidgetComponent->SetupAttachment(PistolMesh,TEXT("Widget"));
+	PistolWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
+	RifleWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("RifleWidget"));
+	RifleWidgetComponent->SetupAttachment(RifleMesh,TEXT("Widget"));
+	RifleWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	
 	IsCanFire = true;
 }
 
@@ -62,12 +78,30 @@ void AJMSShootingChar::BeginPlay()
 
 	// TimeLine에 함수 델리게이트로 연결
 	AimTimeline.AddInterpFloat(AimCurveData, AimDelegate,TEXT("OnTimelineFloat"));
+
+	if (PistolWidgetComponent)
+	{
+		
+		PistolUI = Cast<UJMSPistolUI>(PistolWidgetComponent->GetWidget());
+
+	}
+
+	if (RifleWidgetComponent)
+	{
+		RifleUI = Cast<UJMSRifleUI>(RifleWidgetComponent->GetWidget());
+	}
+
+	PistolVisibleFunc(false);
+	RifleVisibleFunc(false);
 }
 
 void AJMSShootingChar::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+
+	
+	
 	AimTimeline.TickTimeline(DeltaSeconds);
 
 	if (EquippedWeapon == E_Weapon::Pistol)
@@ -131,6 +165,10 @@ void AJMSShootingChar::SwitchWeapon(const FInputActionValue& InputActionValue)
 
 void AJMSShootingChar::AimStarted(const FInputActionValue& InputActionValue)
 {
+	if (EquippedWeapon == E_Weapon::Pistol && !IsStartReloading)
+		PistolVisibleFunc(true);
+	if (EquippedWeapon == E_Weapon::Rifle && !IsStartReloading)
+		RifleVisibleFunc(true);
 	if (CurrentGate == E_Gate::Walking || CurrentGate == E_Gate::Jogging)
 	{
 		UpdateGate(E_Gate::Walking);
@@ -145,6 +183,8 @@ void AJMSShootingChar::AimStarted(const FInputActionValue& InputActionValue)
 
 void AJMSShootingChar::AimCompleted(const FInputActionValue& InputActionValue)
 {
+	PistolVisibleFunc(false);
+	RifleVisibleFunc(false);
 	if (CurrentGate == E_Gate::Walking || CurrentGate == E_Gate::Jogging)
 	{
 		UpdateGate(E_Gate::Jogging);
@@ -198,8 +238,12 @@ void AJMSShootingChar::StartFireAction(const FInputActionValue& InputActionValue
 
 void AJMSShootingChar::ResetIsCanFire()
 {
-	IsCanFire = true;
-	IsResetIsCanFireFlag = true;
+	if (!IsStartReloading)
+	{
+		IsCanFire = true;
+		IsResetIsCanFireFlag = true;
+		
+	}
 }
 
 
@@ -221,6 +265,7 @@ void AJMSShootingChar::FirePistol()
 	bool HaveBullet = PistolBulletManager();
 	if (HaveBullet)
 	{
+		
 		JMSPlayMontage(PistolFireAnimMontage);
 		JMSPlayAnimation(PistolMesh, PistolFireAnim, false);
 		JMSPlaySound(PistolMesh, SoundPistolFire,TEXT("Barrel"));
@@ -402,6 +447,9 @@ void AJMSShootingChar::ReloadAction()
 			JMSPlayAnimation(PistolMesh, PistolReloadAnim, false);
 			//JMSPlaySound(PistolMesh, SoundPistolReload,TEXT("Barrel"));
 			IsStartReloading = true;
+
+				PistolVisibleFunc(false);
+			
 			
 		}
 		if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnim && RifleClipAmount > 0)
@@ -413,6 +461,8 @@ void AJMSShootingChar::ReloadAction()
 			JMSPlayAnimation(RifleMesh, RifleReloadAnim, false);
 			//JMSPlaySound(RifleMesh, SoundRifleReload,TEXT("Barrel"));
 			IsStartReloading = true;
+
+			RifleVisibleFunc(false);
 		}
 	}
 }
@@ -426,9 +476,13 @@ void AJMSShootingChar::OnPistolReloadEnded(UAnimMontage* Montage, bool bInterrup
 	if (PistolClipAmount > 0)
 	{
 		PistolClipAmount -= 1;
+		PistolUI->UpdateClipAmount(PistolClipAmount);
 		PistolBulletAmount = PistolClipSize;
+		PistolUI->UpdateBulletAmount(PistolBulletAmount);
 
 	}
+	if (IsAiming && EquippedWeapon == E_Weapon::Pistol)
+		PistolVisibleFunc(true);
 }
 
 void AJMSShootingChar::OnRifleReloadEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -439,25 +493,36 @@ void AJMSShootingChar::OnRifleReloadEnded(UAnimMontage* Montage, bool bInterrupt
 	if (RifleClipAmount > 0)
 	{
 		RifleClipAmount -= 1;
+		PistolUI->UpdateClipAmount(RifleClipAmount);
 		RifleBulletAmount = RifleClipSize;
+		RifleUI->UpdateBulletAmount(RifleBulletAmount);
 
 	}
+	if (IsAiming && EquippedWeapon == E_Weapon::Rifle)
+		RifleVisibleFunc(true);
 }
 
 
 void AJMSShootingChar::ChangeWeapon(E_Weapon Equipped)
 {
 	StopFireAction();
+	PistolVisibleFunc(false);
+	RifleVisibleFunc(false);
 	FName PistolAttachSocketName = WeaponSockets.PistolUnEquipped;
 	FName RifleAttachSocketName = WeaponSockets.RifleUnEquipped;
 	if (Equipped == E_Weapon::Pistol)
 	{
 		PistolAttachSocketName = WeaponSockets.WeaponEquipped;
+		if (IsAiming)
+			PistolVisibleFunc(true);
 	}
 	else if (EquippedWeapon == E_Weapon::Rifle)
 	{
 		RifleAttachSocketName = WeaponSockets.WeaponEquipped;
+		if (IsAiming)
+			RifleVisibleFunc(true);
 	}
+
 
 	RifleMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale,
 	                             RifleAttachSocketName);
@@ -628,11 +693,55 @@ void AJMSShootingChar::OnAimUpdate(float Alpha)
 	GetCameraBoom()->TargetArmLength = CurrentLength;
 }
 
+void AJMSShootingChar::PistolVisibleFunc(bool IsVisible) const
+{
+	if (PistolUI)
+	{
+		PistolUI->UpdateBulletAmount(PistolBulletAmount);
+		PistolUI->UpdateClipAmount(PistolClipAmount);
+	}
+	
+	if (PistolWidgetComponent != nullptr)
+	{
+		if (PistolUI)
+		{
+			PistolUI->SetVisibility(ESlateVisibility::Collapsed);
+			if (IsVisible)
+			{
+				PistolUI->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+	}
+}
+
+void AJMSShootingChar::RifleVisibleFunc(bool IsVisible) const
+{
+	if (RifleUI)
+	{
+		RifleUI->UpdateBulletAmount(RifleBulletAmount);
+		RifleUI->UpdateClipAmount(RifleClipAmount);
+	}
+	
+	if (PistolWidgetComponent != nullptr)
+	{
+		if (RifleUI)
+		{
+			RifleUI->SetVisibility(ESlateVisibility::Collapsed);
+			if (IsVisible)
+			{
+				RifleUI->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+	}
+}
+
 bool AJMSShootingChar::PistolBulletManager()
 {
 	if (PistolBulletAmount > 0)
 	{
 		PistolBulletAmount -= 1;
+		PistolUI->UpdateBulletAmount(PistolBulletAmount);
+
 		return true;
 	}
 	if (PistolClipAmount > 0)
@@ -648,6 +757,7 @@ bool AJMSShootingChar::RifleBulletManager()
 	if (RifleBulletAmount > 0)
 	{
 		RifleBulletAmount -= 1;
+		RifleUI->UpdateBulletAmount(RifleBulletAmount);
 		return true;
 	}
 	if (RifleClipAmount > 0)
