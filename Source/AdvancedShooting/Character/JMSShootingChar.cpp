@@ -20,11 +20,13 @@
 
 AJMSShootingChar::AJMSShootingChar()
 {
-	PistolClipSize = 10;
-	PistolClipAmount = 2;
-	RifleClipSize = 10;
-	RifleClipAmount = 2;
-	
+	PistolClipSize = 5;
+	PistolClipAmount = 4;
+	RifleClipSize = 20;
+	RifleClipAmount = 4;
+
+	PistolBulletAmount = PistolClipSize;
+	RifleBulletAmount = RifleClipSize;
 	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMesh"));
 
 	RifleMesh->SetupAttachment(GetMesh(), WeaponSockets.RifleUnEquipped);
@@ -483,6 +485,9 @@ void AJMSShootingChar::OnPistolReloadEnded(UAnimMontage* Montage, bool bInterrup
 	}
 	if (IsAiming && EquippedWeapon == E_Weapon::Pistol)
 		PistolVisibleFunc(true);
+
+	if (EquippedWeapon == E_Weapon::Rifle)
+		RifleVisibleFunc(true);
 }
 
 void AJMSShootingChar::OnRifleReloadEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -500,6 +505,8 @@ void AJMSShootingChar::OnRifleReloadEnded(UAnimMontage* Montage, bool bInterrupt
 	}
 	if (IsAiming && EquippedWeapon == E_Weapon::Rifle)
 		RifleVisibleFunc(true);
+	if (EquippedWeapon == E_Weapon::Pistol)
+		PistolVisibleFunc(true);
 }
 
 
@@ -513,13 +520,13 @@ void AJMSShootingChar::ChangeWeapon(E_Weapon Equipped)
 	if (Equipped == E_Weapon::Pistol)
 	{
 		PistolAttachSocketName = WeaponSockets.WeaponEquipped;
-		if (IsAiming)
+		if (IsAiming && !IsStartReloading)
 			PistolVisibleFunc(true);
 	}
 	else if (EquippedWeapon == E_Weapon::Rifle)
 	{
 		RifleAttachSocketName = WeaponSockets.WeaponEquipped;
-		if (IsAiming)
+		if (IsAiming&& !IsStartReloading)
 			RifleVisibleFunc(true);
 	}
 
@@ -741,7 +748,7 @@ bool AJMSShootingChar::PistolBulletManager()
 	{
 		PistolBulletAmount -= 1;
 		PistolUI->UpdateBulletAmount(PistolBulletAmount);
-
+		
 		return true;
 	}
 	if (PistolClipAmount > 0)
