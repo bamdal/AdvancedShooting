@@ -9,6 +9,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraDataInterfaceArrayFunctionLibrary.h"
+#include "AdvancedShooting/UI/JMSCrosshair.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -22,6 +24,10 @@ AJMSShootingChar::AJMSShootingChar()
 	PistolMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PistolMesh"));
 	PistolMesh->SetupAttachment(GetMesh(), WeaponSockets.PistolUnEquipped);
 
+
+	Pistol_ReloadMontageEnded.BindUObject(this,&AJMSShootingChar::OnPistolReloadEnded);
+	Rifle_ReloadMontageEnded.BindUObject(this,&ThisClass::OnRifleReloadEnded);
+	
 
 	IsCanFire = true;
 }
@@ -38,6 +44,18 @@ void AJMSShootingChar::BeginPlay()
 	CurrentGate = E_Gate::Jogging;
 	UpdateGate(CurrentGate);
 
+	if (WBP_Crosshair)
+	{
+		CrosshairWidget = CreateWidget<UJMSCrosshair>(GetWorld(),WBP_Crosshair);
+		if (CrosshairWidget)
+		{
+			CrosshairWidget->AddToViewport();
+			CrosshairWidget->PlayerController = GetLocalViewingPlayerController();
+		}
+		
+		
+	}
+	
 
 	FOnTimelineFloat AimDelegate;
 	AimDelegate.BindUFunction(this,TEXT("OnAimUpdate"));
@@ -54,14 +72,15 @@ void AJMSShootingChar::Tick(float DeltaSeconds)
 
 	if (EquippedWeapon == E_Weapon::Pistol)
 	{
-
-		GetAimLocation(PistolMesh);
+		CrosshairWidget->CrosshairPos = GetAimLocation(PistolMesh);
+		
+		
 		
 	}
 
 	if (EquippedWeapon == E_Weapon::Rifle)
 	{
-		GetAimLocation(RifleMesh);
+		CrosshairWidget->CrosshairPos = GetAimLocation(RifleMesh);
 	}
 }
 
@@ -183,6 +202,7 @@ void AJMSShootingChar::ResetIsCanFire()
 	IsResetIsCanFireFlag = true;
 }
 
+
 void AJMSShootingChar::StopFireAction()
 {
 	GetWorld()->GetTimerManager().ClearTimer(ShootingTimerHandle);
@@ -208,7 +228,7 @@ void AJMSShootingChar::FirePistol()
 	}
 	else
 	{
-		
+		IsResetIsCanFireFlag = true;
 		StopFireAction();
 	}
 }
@@ -220,13 +240,14 @@ void AJMSShootingChar::FireRifle()
 	if (HaveBullet)
 	{
 		JMSPlayMontage(RifleFireAnimMontage);
+
 		JMSPlayAnimation(RifleMesh, RifleFireAnim, false);
 		JMSPlaySound(RifleMesh, SoundRifleFire,TEXT("Barrel"));
 		JMSFireLineTraceProc(RifleMesh);
 	}
 	else
 	{
-
+		IsResetIsCanFireFlag = true;
 		StopFireAction();
 	}
 }
@@ -370,33 +391,59 @@ void AJMSShootingChar::JMSImpactSound(FVector ImpactLocation, UPhysicalMaterial*
 
 void AJMSShootingChar::ReloadAction()
 {
-	if (IsCanFire)
+	if (IsCanFire && !IsStartReloading)
 	{
-		IsCanFire = false;
-		IsResetIsCanFireFlag = false;
+		StopFireAction();
 		if (EquippedWeapon == E_Weapon::Pistol && PistolClipAmount > 0)
 		{
-			PistolClipAmount--;
-			JMSPlayMontage(PistolReloadAnimMontage);
+			IsCanFire = false;
+			IsResetIsCanFireFlag = false;
+			JMSPlayMontageOnCompleted(PistolReloadAnimMontage,Pistol_ReloadMontageEnded);
 			JMSPlayAnimation(PistolMesh, PistolReloadAnim, false);
 			//JMSPlaySound(PistolMesh, SoundPistolReload,TEXT("Barrel"));
-			PistolBulletAmount = PistolClipSize;
-			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.0f,
-			                                       false);
+			IsStartReloading = true;
+			
 		}
 		if (EquippedWeapon == E_Weapon::Rifle && RifleReloadAnim && RifleClipAmount > 0)
 		{
-			RifleClipAmount--;
-			JMSPlayMontage(RifleReloadAnimMontage);
+			IsCanFire = false;
+			IsResetIsCanFireFlag = false;
+			//JMSPlayMontage(RifleReloadAnimMontage);
+			JMSPlayMontageOnCompleted(RifleReloadAnimMontage,Rifle_ReloadMontageEnded);
 			JMSPlayAnimation(RifleMesh, RifleReloadAnim, false);
 			//JMSPlaySound(RifleMesh, SoundRifleReload,TEXT("Barrel"));
-			RifleBulletAmount = RifleClipSize;
-
-			GetWorld()->GetTimerManager().SetTimer(ShootingDelayTimerHandle, this, &ThisClass::ResetIsCanFire, 2.2f,
-			                                       false);
+			IsStartReloading = true;
 		}
 	}
 }
+
+
+void AJMSShootingChar::OnPistolReloadEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	IsCanFire = true;
+	IsResetIsCanFireFlag = true;
+	IsStartReloading = false;
+	if (PistolClipAmount > 0)
+	{
+		PistolClipAmount -= 1;
+		PistolBulletAmount = PistolClipSize;
+
+	}
+}
+
+void AJMSShootingChar::OnRifleReloadEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	IsCanFire = true;
+	IsResetIsCanFireFlag = true;
+	IsStartReloading = false;
+	if (RifleClipAmount > 0)
+	{
+		RifleClipAmount -= 1;
+		RifleBulletAmount = RifleClipSize;
+
+	}
+}
+
 
 void AJMSShootingChar::ChangeWeapon(E_Weapon Equipped)
 {
@@ -540,6 +587,19 @@ void AJMSShootingChar::JMSPlayMontage(UAnimMontage* Montage)
 	AnimInstance->Montage_Play(Montage);
 }
 
+
+void AJMSShootingChar::JMSPlayMontageOnCompleted(UAnimMontage* Montage, FOnMontageEnded MontageEndedDelegate) const
+{
+	if (Montage == nullptr || AnimInstance == nullptr)
+		return;
+	
+	AnimInstance->Montage_Play(Montage);
+	// 몽타주 재생이 끝나면 델리게이트를 사용해 바인딩된 함수를 호출
+	AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate,Montage);
+	
+}
+
+
 void AJMSShootingChar::JMSPlayAnimation(USkeletalMeshComponent* Weapon, UAnimationAsset* AnimSequence, bool bLoop)
 {
 	if (Weapon == nullptr || AnimSequence == nullptr)
@@ -613,5 +673,5 @@ FVector AJMSShootingChar::GetAimLocation(USkinnedMeshComponent* Weapon)
 	{
 		return HitResult.ImpactPoint;
 	}
-	return FVector::ZeroVector;
+	return End;
 }

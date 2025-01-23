@@ -9,10 +9,10 @@
 #include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "Components/TimelineComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "JMSShootingChar.generated.h"
 
 
+class UJMSCrosshair;
 /**
  * 
  */
@@ -163,11 +163,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooting")
 	TObjectPtr<UAnimationAsset> RifleFireAnim;
 
+protected:
+	FOnMontageEnded Pistol_ReloadMontageEnded;
+	FOnMontageEnded Rifle_ReloadMontageEnded;
+
+	UFUNCTION()
+	void OnPistolReloadEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+	UFUNCTION()
+	void OnRifleReloadEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateGate(E_Gate Gate);
 
 	UFUNCTION(BlueprintCallable)
 	void JMSPlayMontage(UAnimMontage* Montage);
+
+
+	void JMSPlayMontageOnCompleted(UAnimMontage* Montage, FOnMontageEnded MontageEndedDelegate) const;
+	
 
 	UFUNCTION(BlueprintCallable)
 	void JMSPlayAnimation(USkeletalMeshComponent* Weapon, UAnimationAsset* AnimSequence, bool bLoop);
@@ -203,6 +217,13 @@ protected:
 
 protected:
 	// 조준 --------------------------------------------------
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Aim")
+	UJMSCrosshair* CrosshairWidget;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Aim")
+	TSubclassOf<UJMSCrosshair> WBP_Crosshair;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aim")
 	bool IsAiming = false;
 
@@ -266,6 +287,9 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
 	float RifleBulletAmount;	// 탄창에 남은 총알 갯수
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	bool IsStartReloading = false;	// 리로드 동작 중인지 판단
+
 protected:
 	UFUNCTION(BlueprintCallable)
 	bool PistolBulletManager();
@@ -273,3 +297,5 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	bool RifleBulletManager();
 };
+
+
