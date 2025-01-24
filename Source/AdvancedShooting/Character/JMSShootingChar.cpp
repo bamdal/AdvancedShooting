@@ -14,6 +14,7 @@
 #include "AdvancedShooting/UI/JMSRifleUI.h"
 #include "AdvancedShooting/UI/JMSWeaponUI.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/SpotLightComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -25,6 +26,9 @@ AJMSShootingChar::AJMSShootingChar()
 	RifleClipSize = 20;
 	RifleClipAmount = 4;
 
+
+
+#pragma region 장비생성
 	PistolBulletAmount = PistolClipSize;
 	RifleBulletAmount = RifleClipSize;
 	RifleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMesh"));
@@ -35,6 +39,25 @@ AJMSShootingChar::AJMSShootingChar()
 	PistolMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PistolMesh"));
 	PistolMesh->SetupAttachment(GetMesh(), WeaponSockets.PistolUnEquipped);
 
+	Helmet = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Helmet"));
+	Helmet->SetupAttachment(GetMesh(),TEXT("Helmet"));
+
+	PistolHolster = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PistolHolster"));
+	PistolHolster->SetupAttachment(GetMesh(),TEXT("PistolHolster"));
+	
+	Torch = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Torch"));
+	Torch->SetupAttachment(GetMesh(),TEXT("Torch"));
+
+	TorchLightComponent = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLightComponent"));
+	TorchLightComponent->SetupAttachment(GetMesh(),TEXT("TorchLight"));
+	TorchLightComponent->CastShadows
+	
+
+	TorchHolder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TorchHolder"));
+	TorchHolder->SetupAttachment(GetMesh(),TEXT("TorchHolder"));
+
+	HealthBar = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HealthBar"));
+	HealthBar->SetupAttachment(GetMesh(),TEXT("HealthBar"));
 
 	Pistol_ReloadMontageEnded.BindUObject(this,&AJMSShootingChar::OnPistolReloadEnded);
 	Rifle_ReloadMontageEnded.BindUObject(this,&ThisClass::OnRifleReloadEnded);
@@ -46,7 +69,7 @@ AJMSShootingChar::AJMSShootingChar()
 	RifleWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("RifleWidget"));
 	RifleWidgetComponent->SetupAttachment(RifleMesh,TEXT("Widget"));
 	RifleWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	
+#pragma endregion	
 	IsCanFire = true;
 }
 
@@ -315,12 +338,12 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 	                                                  EDrawDebugTrace::None, HitResult, true);
 	if (bHit)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Purple,
+		/*GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Purple,
 		                                 FString::Printf(
 			                                 TEXT("%s ,%s ,%s ,%s ,%s , "), *HitResult.ImpactPoint.ToString(),
 			                                 *HitResult.ImpactNormal.ToString(), *HitResult.Normal.ToString(),
 			                                 *HitResult.PhysMaterial->GetName(),
-			                                 *HitResult.HitObjectHandle.GetName()));;
+			                                 *HitResult.HitObjectHandle.GetName()));*/
 
 		// 총알 충돌지점 별로 사운드 출력
 		JMSImpactSound(HitResult.ImpactPoint, HitResult.PhysMaterial.Get());
@@ -686,8 +709,8 @@ void AJMSShootingChar::JMSPlaySound(USkinnedMeshComponent* Weapon, USoundBase* S
 
 	FTransform SpawnTransform = Weapon->GetSocketTransform(BoneName, RTS_World);
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, SpawnTransform.GetLocation());
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
-	                                 FString::Printf(TEXT("AJMSShootingChar Sound %s"), *Sound->GetName()));
+	/*GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
+	                                 FString::Printf(TEXT("AJMSShootingChar Sound %s"), *Sound->GetName()));*/
 }
 
 void AJMSShootingChar::OnAimUpdate(float Alpha)

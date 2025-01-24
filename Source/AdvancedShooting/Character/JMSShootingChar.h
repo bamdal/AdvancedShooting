@@ -12,6 +12,7 @@
 #include "JMSShootingChar.generated.h"
 
 
+class USpotLightComponent;
 class UJMSRifleUI;
 class UJMSPistolUI;
 class UJMSWeaponUI;
@@ -69,13 +70,35 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ABP")
 	TSubclassOf<UAnimInstance> ABP_Rifle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	// 장비 매시 -----------------------------------------------
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> RifleMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> PistolMesh;
 
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Helmet;
 	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* PistolHolster;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Torch;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpotLightComponent> TorchLightComponent;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* TorchHolder;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* HealthBar;
+
+protected:
+	
+	// UI -------------------------------------------------------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<UWidgetComponent> PistolWidgetComponent;
@@ -85,7 +108,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<UWidgetComponent> RifleWidgetComponent;
-
 	
 	UPROPERTY()
 	UJMSRifleUI* RifleUI;
@@ -321,6 +343,8 @@ protected:
 	
 	UFUNCTION(BlueprintCallable)
 	bool RifleBulletManager();
+
+	
 };
 
 
