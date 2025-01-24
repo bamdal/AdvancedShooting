@@ -50,7 +50,7 @@ AJMSShootingChar::AJMSShootingChar()
 
 	TorchLightComponent = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLightComponent"));
 	TorchLightComponent->SetupAttachment(GetMesh(),TEXT("TorchLight"));
-	TorchLightComponent->CastShadows
+
 	
 
 	TorchHolder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TorchHolder"));
@@ -58,6 +58,13 @@ AJMSShootingChar::AJMSShootingChar()
 
 	HealthBar = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HealthBar"));
 	HealthBar->SetupAttachment(GetMesh(),TEXT("HealthBar"));
+
+	ShieldWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("ShieldWidget"));
+	ShieldWidgetComponent->SetupAttachment(HealthBar);
+	ShieldWidgetComponent->SetRelativeLocation(FVector(-2.706551, -2.786629, 19.229441));
+	ShieldWidgetComponent->SetRelativeRotation(FRotator(0, 0, -100));
+	ShieldWidgetComponent->SetRelativeScale3D(FVector(0.07,0.07,0.07));
+	
 
 	Pistol_ReloadMontageEnded.BindUObject(this,&AJMSShootingChar::OnPistolReloadEnded);
 	Rifle_ReloadMontageEnded.BindUObject(this,&ThisClass::OnRifleReloadEnded);
@@ -78,6 +85,10 @@ void AJMSShootingChar::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Health = MaxHealth;
+	UpdateHealthUI();
+	Shield = MaxShield;
+	
 	AnimInstance = GetMesh()->GetAnimInstance();
 
 	if (ABP_Unarmed)
@@ -115,6 +126,7 @@ void AJMSShootingChar::BeginPlay()
 	{
 		RifleUI = Cast<UJMSRifleUI>(RifleWidgetComponent->GetWidget());
 	}
+
 
 	PistolVisibleFunc(false);
 	RifleVisibleFunc(false);
@@ -796,6 +808,53 @@ bool AJMSShootingChar::RifleBulletManager()
 	}
 	return false;
 }
+
+void AJMSShootingChar::IncreaseHealth(float Amount)
+{
+	Health = FMath::Min(Health + Amount, MaxHealth);
+	UpdateHealthUI();
+}
+
+void AJMSShootingChar::DecreaseHealth(float Amount)
+{
+	if (Shield>Amount)
+	{
+		Shield -= Amount;
+	}
+	else
+	{
+		Health = FMath::Max(Health - (Amount-Shield), 0);
+		Shield = 0;
+	}
+	UpdateHealthUI();
+	UpdateShieldUI();
+	if (Health <= 0)
+	{
+		
+	}
+}
+
+void AJMSShootingChar::IncreaseShield(float Amount)
+{
+	Shield = FMath::Min(Shield + Amount,MaxShield);
+	UpdateShieldUI();
+}
+
+void AJMSShootingChar::UpdateHealthUI()
+{
+	HealthBar->SetScalarParameterValueOnMaterials(MaterialHealthName,Health);
+}
+
+void AJMSShootingChar::UpdateShieldUI()
+{
+	
+	IWBPInterface* ShieldInterface = Cast<IWBPInterface>(ShieldWidgetComponent->GetWidget());
+	if (ShieldInterface)
+	{
+		ShieldInterface->UpdateShieldWidget(Shield);
+	}
+}
+
 FVector AJMSShootingChar::GetAimLocation(USkinnedMeshComponent* Weapon)
 {
 

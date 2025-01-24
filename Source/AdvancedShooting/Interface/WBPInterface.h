@@ -23,12 +23,9 @@ class ADVANCEDSHOOTING_API IWBPInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void UpdateBulletAmount(float Amount);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void UpdateClipAmount(float Amount);
+	virtual void UpdateShieldWidget(float Amount) = 0;
 
 	
-	
 };
+

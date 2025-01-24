@@ -96,6 +96,12 @@ private:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* HealthBar;
 
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Character", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> ShieldWidgetComponent;
+
+	
+
+
 protected:
 	
 	// UI -------------------------------------------------------
@@ -112,7 +118,23 @@ protected:
 	UPROPERTY()
 	UJMSRifleUI* RifleUI;
 
+	// Status Property -----------------------------------------------
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
+	float MaxHealth = 100;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
+	float Health;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
+	FName MaterialHealthName = TEXT("HealthPercent");
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
+	float MaxShield = 100;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
+	float Shield;
+
+	
 	// Weapon Shoot Property ---------------------------------------------
 
 	UPROPERTY(EditAnywhere)
@@ -343,6 +365,22 @@ protected:
 	
 	UFUNCTION(BlueprintCallable)
 	bool RifleBulletManager();
+
+	// Status Func ---------------------------------------------
+	UFUNCTION(BlueprintCallable)
+	void IncreaseHealth(float Amount);
+
+	UFUNCTION(BlueprintCallable)
+	void DecreaseHealth(float Amount);
+
+	UFUNCTION(BlueprintCallable)
+	void IncreaseShield(float Amount);
+
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateHealthUI();
+	UFUNCTION(BlueprintCallable)
+	void UpdateShieldUI();
 
 	
 };
