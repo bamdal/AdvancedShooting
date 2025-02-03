@@ -9,6 +9,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraDataInterfaceArrayFunctionLibrary.h"
+#include "AdvancedShooting/Interface/BPI_Kraken.h"
 #include "AdvancedShooting/UI/JMSCrosshair.h"
 #include "AdvancedShooting/UI/JMSPistolUI.h"
 #include "AdvancedShooting/UI/JMSRifleUI.h"
@@ -22,9 +23,11 @@
 AJMSShootingChar::AJMSShootingChar()
 {
 	PistolClipSize = 5;
+	PistolClipAmountMax = 6;
 	PistolClipAmount = 4;
 	RifleClipSize = 20;
 	RifleClipAmount = 4;
+	RifleClipAmountMax = 6;
 
 
 
@@ -85,9 +88,9 @@ void AJMSShootingChar::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Health = MaxHealth;
+	CurrentHealth = MaxHealth;
 	UpdateHealthUI();
-	Shield = MaxShield;
+	CurrentShield = MaxShield;
 	
 	AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -365,6 +368,11 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 
 		// 총알 피격 이펙트(믈리 머티리얼별 선별 처리)
 		JMSFireImpactEffect(HitResult.PhysMaterial.Get(), HitResult.ImpactNormal, HitResult.ImpactPoint);
+
+		if(HitResult.GetActor()->GetClass()->ImplementsInterface(UBPI_Kraken::StaticClass()))
+		{
+			IBPI_Kraken::Execute_Damage(HitResult.GetActor(),TEXT(""),HitResult.ImpactPoint);
+		}
 	}
 	else
 	{
@@ -809,26 +817,46 @@ bool AJMSShootingChar::RifleBulletManager()
 	return false;
 }
 
+void AJMSShootingChar::IncreasePistolClip(int32 Amount)
+{
+	PistolClipAmount += Amount;
+	if (PistolClipAmount > PistolClipAmountMax)
+	{
+		PistolClipAmount = PistolClipAmountMax;
+	}
+	PistolUI->UpdateClipAmount(PistolClipAmount);
+}
+
+void AJMSShootingChar::IncreaseRifleClip(int32 Amount)
+{
+	RifleClipAmount += Amount;
+	if (RifleClipAmount > RifleClipAmountMax)
+	{
+		RifleClipAmount = RifleClipAmountMax;
+	}
+	RifleUI->UpdateClipAmount(RifleClipAmount);
+}
+
 void AJMSShootingChar::IncreaseHealth(float Amount)
 {
-	Health = FMath::Min(Health + Amount, MaxHealth);
+	CurrentHealth = FMath::Min(CurrentHealth + Amount, MaxHealth);
 	UpdateHealthUI();
 }
 
 void AJMSShootingChar::DecreaseHealth(float Amount)
 {
-	if (Shield>Amount)
+	if (CurrentShield>Amount)
 	{
-		Shield -= Amount;
+		CurrentShield -= Amount;
 	}
 	else
 	{
-		Health = FMath::Max(Health - (Amount-Shield), 0);
-		Shield = 0;
+		CurrentHealth = FMath::Max(CurrentHealth - (Amount-CurrentShield), 0);
+		CurrentShield = 0;
 	}
 	UpdateHealthUI();
 	UpdateShieldUI();
-	if (Health <= 0)
+	if (CurrentHealth <= 0)
 	{
 		
 	}
@@ -836,13 +864,13 @@ void AJMSShootingChar::DecreaseHealth(float Amount)
 
 void AJMSShootingChar::IncreaseShield(float Amount)
 {
-	Shield = FMath::Min(Shield + Amount,MaxShield);
+	CurrentShield = FMath::Min(CurrentShield + Amount,MaxShield);
 	UpdateShieldUI();
 }
 
 void AJMSShootingChar::UpdateHealthUI()
 {
-	HealthBar->SetScalarParameterValueOnMaterials(MaterialHealthName,Health);
+	HealthBar->SetScalarParameterValueOnMaterials(MaterialHealthName,CurrentHealth);
 }
 
 void AJMSShootingChar::UpdateShieldUI()
@@ -851,8 +879,28 @@ void AJMSShootingChar::UpdateShieldUI()
 	IWBPInterface* ShieldInterface = Cast<IWBPInterface>(ShieldWidgetComponent->GetWidget());
 	if (ShieldInterface)
 	{
-		ShieldInterface->UpdateShieldWidget(Shield);
+		ShieldInterface->UpdateShieldWidget(CurrentShield);
 	}
+}
+
+void AJMSShootingChar::IncreaseCharacterHealth(int32 Amount)
+{
+	IncreaseHealth(Amount);
+}
+
+void AJMSShootingChar::IncreaseCharacterShield(int32 Amount)
+{
+	IncreaseShield(Amount);
+}
+
+void AJMSShootingChar::IncreaseCharacterPistolClip(int32 Amount)
+{
+	IncreasePistolClip(Amount);
+}
+
+void AJMSShootingChar::IncreaseCharacterRifleClip(int32 Amount)
+{
+	IncreaseRifleClip(Amount);
 }
 
 FVector AJMSShootingChar::GetAimLocation(USkinnedMeshComponent* Weapon)

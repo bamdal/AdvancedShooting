@@ -9,6 +9,7 @@
 #include "AdvancedShooting/Struct/WeaponSocket.h"
 #include "Components/TimelineComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "AdvancedShooting/Interface/CharacterInterface.h"
 #include "JMSShootingChar.generated.h"
 
 
@@ -22,7 +23,7 @@ class UJMSCrosshair;
  * 
  */
 UCLASS()
-class ADVANCEDSHOOTING_API AJMSShootingChar : public AJMSCharBase
+class ADVANCEDSHOOTING_API AJMSShootingChar : public AJMSCharBase, public ICharacterInterface
 {
 	GENERATED_BODY()
 
@@ -123,7 +124,7 @@ protected:
 	float MaxHealth = 100;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
-	float Health;
+	float CurrentHealth;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
 	FName MaterialHealthName = TEXT("HealthPercent");
@@ -132,7 +133,7 @@ protected:
 	float MaxShield = 100;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Status")
-	float Shield;
+	float CurrentShield;
 
 	
 	// Weapon Shoot Property ---------------------------------------------
@@ -332,27 +333,41 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void JMSImpactSound(FVector ImpactLocation,UPhysicalMaterial* ImpactMaterial);
 
-
+	// 탄창에 들어가는 총알 최대 수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	float PistolClipSize;		// 탄창에 들어가는 총알 최대 수
+	float PistolClipSize;		
 
+	// 탄창의 ㅊ되개수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	float PistolClipAmount;		// 탄창의 개수
+	float PistolClipAmountMax;		
 
+	// 탄창의 개수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	float PistolBulletAmount;	// 탄창에 남은 총알 갯수
+	float PistolClipAmount;		
 
+	// 탄창에 남은 총알 갯수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	float RifleClipSize;		// 탄창에 들어가는 총알 최대 수
+	float PistolBulletAmount;	
 
+	// 탄창에 들어가는 총알 최대 수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	float RifleClipAmount;		// 탄창의 개수
+	float RifleClipSize;		
 
+	// 탄창의 개수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	float RifleBulletAmount;	// 탄창에 남은 총알 갯수
+	float RifleClipAmountMax;		
 
+	// 탄창의 개수
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
-	bool IsStartReloading = false;	// 리로드 동작 중인지 판단
+	float RifleClipAmount;		
+
+	// 탄창에 남은 총알 갯수
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	float RifleBulletAmount;	
+
+	// 리로드 동작 중인지 판단
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Clip")
+	bool IsStartReloading = false;	
 
 	UFUNCTION(BlueprintCallable)
     void PistolVisibleFunc(bool IsVisible) const;
@@ -366,22 +381,49 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	bool RifleBulletManager();
 
+	// 피스톨 탄창 증가
+	UFUNCTION(BlueprintCallable)
+	void IncreasePistolClip(int32 Amount);	
+
+	// 라이플 탄창 증가
+	UFUNCTION(BlueprintCallable)
+	void IncreaseRifleClip(int32 Amount);	
+
 	// Status Func ---------------------------------------------
+
+	// 체력 증가
 	UFUNCTION(BlueprintCallable)
-	void IncreaseHealth(float Amount);
+	void IncreaseHealth(float Amount);	
 
+	// 체력 감소
 	UFUNCTION(BlueprintCallable)
-	void DecreaseHealth(float Amount);
+	void DecreaseHealth(float Amount);	
 
+	// 쉴드 증가
 	UFUNCTION(BlueprintCallable)
-	void IncreaseShield(float Amount);
+	void IncreaseShield(float Amount);	
 
-
+	// 체력 증감에 따른 UI 변화
 	UFUNCTION(BlueprintCallable)
 	void UpdateHealthUI();
-	UFUNCTION(BlueprintCallable)
-	void UpdateShieldUI();
 
+	// 쉴드 증감에 따른 UI 변화
+	UFUNCTION(BlueprintCallable)
+	void UpdateShieldUI();	
+
+	// Interface ----------------------------------------
+
+	UFUNCTION(BlueprintCallable)
+	virtual void IncreaseCharacterHealth(int32 Amount) override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void IncreaseCharacterShield(int32 Amount) override;
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void IncreaseCharacterPistolClip(int32 Amount) override;
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void IncreaseCharacterRifleClip(int32 Amount) override;
 	
 };
 

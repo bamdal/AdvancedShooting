@@ -38,3 +38,12 @@ enum class E_RootYawOffsetMode : uint8
 	BlendOut		UMETA(DisplayName = "BlendOut"),
 	Hold			UMETA(DisplayName = "Hold"),
 };
+
+UENUM(BlueprintType)
+enum class EItemPadType : uint8
+{
+	Health,
+	Shield,
+	PistolClip,
+	RifleClip
+};

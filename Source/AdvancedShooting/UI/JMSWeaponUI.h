@@ -31,9 +31,11 @@ public:
 	
 	virtual void NativeConstruct() override;
 
+	// BulletUI업데이트
 	UFUNCTION(BlueprintCallable)
 	void UpdateBulletAmount(float Amount);
 
+	// ClipUI업데이트
 	UFUNCTION(BlueprintCallable)
 	void UpdateClipAmount(float Amount);
 };
