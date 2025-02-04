@@ -9,5 +9,5 @@
 
 void UJMSShield::UpdateShieldWidget_Implementation(float Amount)
 {
-	ShieldAmount->SetText(UKismetTextLibrary::Conv_FloatToText(Amount,FromZero));
+	ShieldAmount->SetText(FText::AsNumber(Amount));
 }

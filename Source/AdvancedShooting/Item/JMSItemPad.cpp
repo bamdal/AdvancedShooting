@@ -169,31 +169,42 @@ void AJMSItemPad::Tick(float DeltaTime)
 void AJMSItemPad::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ItemPadDataTable != nullptr && ItemPadNiagaraEffect != nullptr)
-	{
-		FItemPad* ItemPadStruct = ItemPadDataTable->FindRow<FItemPad>(ItemHandle.RowName,TEXT("GetRow"),true);
-		float StructAmount = ItemPadStruct->Amount;
-		if (ItemPadStruct)
-		{
 
-			switch (ItemPadStruct->ItemType)
+	if (OtherActor == nullptr)
+	{
+		return;
+	}
+	
+	if (OtherActor->GetClass()->ImplementsInterface(UCharacterInterface::StaticClass()))
+	{
+		if (ItemPadDataTable != nullptr && ItemPadNiagaraEffect )
+		{
+			FItemPad* ItemPadStruct = ItemPadDataTable->FindRow<FItemPad>(ItemHandle.RowName,TEXT("GetRow"),true);
+			float StructAmount = ItemPadStruct->Amount;
+			if (ItemPadStruct)
 			{
-			case EItemPadType::Health:
-				Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterHealth(StructAmount);
-				break;
-			case EItemPadType::Shield:
-				Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterShield(StructAmount);
-				break;
-			case EItemPadType::PistolClip:
-				Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterPistolClip(StructAmount);
-				break;
-			case EItemPadType::RifleClip:
-				Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterRifleClip(StructAmount);
-				break;
-			default:
-				break;
+
+				switch (ItemPadStruct->ItemType)
+				{
+				case EItemPadType::Health:
+					
+					Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterHealth(StructAmount);
+					break;
+				case EItemPadType::Shield:
+					Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterShield(StructAmount);
+					break;
+				case EItemPadType::PistolClip:
+					Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterPistolClip(StructAmount);
+					break;
+				case EItemPadType::RifleClip:
+					Cast<ICharacterInterface>(OtherActor)->IncreaseCharacterRifleClip(StructAmount);
+					break;
+				default:
+					break;
+				}
 			}
-		}
-		this->Destroy();
-	};
+			this->Destroy();
+		};
+	}
+
 }

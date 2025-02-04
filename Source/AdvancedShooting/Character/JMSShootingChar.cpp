@@ -371,7 +371,7 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 
 		if(HitResult.GetActor()->GetClass()->ImplementsInterface(UBPI_Kraken::StaticClass()))
 		{
-			IBPI_Kraken::Execute_Damage(HitResult.GetActor(),TEXT(""),HitResult.ImpactPoint);
+			IBPI_Kraken::Execute_Damage(HitResult.GetActor(),HitResult.BoneName,HitResult.ImpactPoint);
 		}
 	}
 	else
