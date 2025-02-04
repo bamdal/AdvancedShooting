@@ -390,7 +390,7 @@ protected:
 	void IncreaseRifleClip(int32 Amount);	
 
 	// Status Func ---------------------------------------------
-
+public:
 	// 체력 증가
 	UFUNCTION(BlueprintCallable)
 	void IncreaseHealth(float Amount);	
