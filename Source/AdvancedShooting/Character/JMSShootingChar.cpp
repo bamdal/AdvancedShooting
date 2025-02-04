@@ -858,7 +858,9 @@ void AJMSShootingChar::DecreaseHealth(float Amount)
 	UpdateShieldUI();
 	if (CurrentHealth <= 0)
 	{
+		// 사망처리 death
 		
+		UGameplayStatics::OpenLevel(this,*GetWorld()->GetMapName());
 	}
 }
 
