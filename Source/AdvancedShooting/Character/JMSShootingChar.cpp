@@ -369,6 +369,7 @@ void AJMSShootingChar::JMSFireLineTraceProc(USkinnedMeshComponent* Weapon)
 		// 총알 피격 이펙트(믈리 머티리얼별 선별 처리)
 		JMSFireImpactEffect(HitResult.PhysMaterial.Get(), HitResult.ImpactNormal, HitResult.ImpactPoint);
 
+		// 크라켄 인터페이스가 있다면 Hit처리
 		if(HitResult.GetActor()->GetClass()->ImplementsInterface(UBPI_Kraken::StaticClass()))
 		{
 			IBPI_Kraken::Execute_Damage(HitResult.GetActor(),HitResult.BoneName,HitResult.ImpactPoint);

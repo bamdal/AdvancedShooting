@@ -70,7 +70,7 @@ void AJMSKraken::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	if (!bIsAttacking && DamageAmount>3)
+	if (!bIsAttacking || DamageAmount>3)
 	{
 		return;
 	}
@@ -82,6 +82,7 @@ void AJMSKraken::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	if (Char != nullptr)
 	{
 		Char->DecreaseHealth(FMath::RandRange(5,10));
+		DamageAmount++;
 		FVector pos = Char->GetActorLocation()-GetActorLocation();
 		pos.Normalize();
 		Char->LaunchCharacter(pos*1000.0f,true,false);
